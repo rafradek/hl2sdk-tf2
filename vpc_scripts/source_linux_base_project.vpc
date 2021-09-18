@@ -2,8 +2,10 @@
 $Include "$SRCDIR\vpc_scripts\version.vpc"
 $Macro PLATSUBDIR	"\linux32"	[$LINUX32]
 
-$Macro LIBPUBLIC	"$SRCDIR\lib\public$PLATSUBDIR"
-$Macro LIBCOMMON	"$SRCDIR\lib\common$PLATSUBDIR"
+$Macro LIBPUBLIC	"$SRCDIR\lib\linux" [$LINUX]
+$Macro LIBPUBLIC	"$SRCDIR\lib\mac" [$OSXALL]
+$Macro LIBCOMMON	"$SRCDIR\lib\linux" [$LINUX]
+$Macro LIBCOMMON	"$SRCDIR\lib\mac" [$OSXALL]
 
 $MacroRequired				"SRCDIR"
 
@@ -55,7 +57,7 @@ $Project
 	$Folder "Link Libraries"
 	{
 		$ImpLib "$LIBPUBLIC\tier0"		[!$IS_LIB_PROJECT]
-		$Lib	"$LIBPUBLIC\tier1"		[!$IS_LIB_PROJECT]
-		$ImpLib "$LIBPUBLIC\vstdlib"	[!$IS_LIB_PROJECT]
+		$Lib	"$LIBPUBLIC\tier1_i486"		[!$IS_LIB_PROJECT]
+		$ImpLib "$LIBPUBLIC\vstdlib_i486"	[!$IS_LIB_PROJECT]
 	}
 }
