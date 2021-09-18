@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: static_prop - don't move, don't animate, don't do anything.
 //			physics_prop - move, take damage, but don't animate
@@ -12,6 +12,7 @@
 #include "animation.h"
 #include <vcollide_parse.h>
 #include <bone_setup.h>
+#include <tier0/vprof.h>
 
 #ifdef CLIENT_DLL
 #include "gamestringpool.h"
@@ -25,6 +26,8 @@ ConVar props_break_max_pieces( "props_break_max_pieces", "-1", 0, "Maximum prop 
 ConVar props_break_max_pieces_perframe( "props_break_max_pieces_perframe", "-1", FCVAR_REPLICATED, "Maximum prop breakable piece count per frame (-1 = model default)" );
 #ifdef GAME_DLL
 extern ConVar breakable_multiplayer;
+#else
+ConVar cl_burninggibs( "cl_burninggibs", "0", 0, "A burning player that gibs has burning gibs." );
 #endif // GAME_DLL
 
 extern bool PropBreakableCapEdictsOnCreateAll(int modelindex, IPhysicsObject *pPhysics, const breakablepropparams_t &params, CBaseEntity *pEntity, int iPrecomputedBreakableCount = -1 );
@@ -278,14 +281,14 @@ int CPropData::ParsePropFromKV( CBaseEntity *pProp, KeyValues *pSection, KeyValu
 	}
 
 	// Allow overriding of Block LOS
-	int iBlockLOS = pSection->GetInt( "blockLOS", -1 );
+	int iBlockLOS = pSection->GetFloat( "blockLOS", -1 );
 	if ( iBlockLOS != -1 )
 	{
 		pBreakableInterface->SetPropDataBlocksLOS( iBlockLOS != 0 );
 	}
 
 	// Set whether AI can walk on this prop
-	int iIsWalkable = pSection->GetInt( "AIWalkable", -1 );
+	int iIsWalkable = pSection->GetFloat( "AIWalkable", -1 );
 	if ( iIsWalkable != -1 )
 	{
 		pBreakableInterface->SetPropDataIsAIWalkable( iIsWalkable != 0 );
@@ -382,7 +385,7 @@ int CPropData::ParsePropFromKV( CBaseEntity *pProp, KeyValues *pSection, KeyValu
 	int iSmallest = SmallestAxis(vecSize);
 	vecSize[iSmallest] = 1;
 	float flVolume = vecSize.x * vecSize.y * vecSize.z;
-	int iMaxSize = (int)floor( flVolume / (32.0*32.0) );
+	int iMaxSize = floor( flVolume / (32.0*32.0) );
 	pBreakableInterface->SetMaxBreakableSize( iMaxSize );
 
 	// Now parse our interactions
@@ -521,7 +524,7 @@ class CBreakParser : public IVPhysicsKeyHandler
 {
 public:
 	CBreakParser( float defaultBurstScale, int defaultCollisionGroup ) 
-		: m_defaultCollisionGroup(defaultCollisionGroup), m_defaultBurstScale(defaultBurstScale) {}
+		: m_defaultBurstScale(defaultBurstScale), m_defaultCollisionGroup(defaultCollisionGroup) {}
 
 	void ParseModelName( breakmodel_t *pModel, const char *pValue )
 	{
@@ -597,6 +600,10 @@ public:
 				pModel->mpBreakMode = MULTIPLAYER_BREAK_CLIENTSIDE;
 			}
 		}
+		else if ( !strcmpi( pKey, "velocity" ) )
+		{
+			UTIL_StringToVector( pModel->velocity.Base(), pValue );
+		}
 	}
 	virtual void SetDefaults( void *pData ) 
 	{
@@ -614,6 +621,7 @@ public:
 		pModel->placementName[0] = 0;
 		pModel->placementIsBone = false;
 		pModel->mpBreakMode = MULTIPLAYER_BREAK_DEFAULT;
+		pModel->velocity = vec3_origin;
 		m_wroteCollisionGroup = false;
 	}
 
@@ -623,7 +631,7 @@ private:
 	bool	m_wroteCollisionGroup;
 };
 
-void BreakModelList( CUtlVector<breakmodel_t> &list, int modelindex, float defBurstScale, int defCollisionGroup )
+void BuildPropList( const char *pszBlockName, CUtlVector<breakmodel_t> &list, int modelindex, float defBurstScale, int defCollisionGroup )
 {
 	vcollide_t *pCollide = modelinfo->GetVCollide( modelindex );
 	if ( !pCollide )
@@ -635,7 +643,7 @@ void BreakModelList( CUtlVector<breakmodel_t> &list, int modelindex, float defBu
 		CBreakParser breakParser( defBurstScale, defCollisionGroup );
 		
 		const char *pBlock = pParse->GetCurrentBlockName();
-		if ( !strcmpi( pBlock, "break" ) )
+		if ( !strcmpi( pBlock, pszBlockName ) )
 		{
 			int index = list.AddToTail();
 			breakmodel_t &breakModel = list[index];
@@ -647,6 +655,11 @@ void BreakModelList( CUtlVector<breakmodel_t> &list, int modelindex, float defBu
 		}
 	}
 	physcollision->VPhysicsKeyParserDestroy( pParse );
+}
+
+void BreakModelList( CUtlVector<breakmodel_t> &list, int modelindex, float defBurstScale, int defCollisionGroup )
+{
+	BuildPropList( "break", list, modelindex, defBurstScale, defCollisionGroup );
 }
 
 #if !defined(_STATIC_LINKED) || defined(CLIENT_DLL)
@@ -709,7 +722,7 @@ const char *GetMassEquivalent(float flMass)
 		{ 7e24,		"really freaking heavy" },
 	};
 
-	for (size_t i = 0; i < sizeof(masstext) / sizeof(masstext[0]) - 1; i++)
+	for (int i = 0; i < sizeof(masstext) / sizeof(masstext[0]) - 1; i++)
 	{
 		if (flMass < masstext[i].flMass)
 		{
@@ -787,7 +800,6 @@ void CGameGibManager::Activate( void )
 
 	BaseClass::Activate();
 }
-
 
 void CGameGibManager::UpdateMaxPieces()
 {
@@ -1224,7 +1236,7 @@ void PropBreakableCreateAll( int modelindex, IPhysicsObject *pPhysics, const Vec
 // Purpose: 
 // Input  : modelindex - 
 //-----------------------------------------------------------------------------
-void PrecacheGibsForModel( int iModel )
+void PrecachePropsForModel( int iModel, const char *pszBlockName )
 {
 	vcollide_t *pCollide = modelinfo->GetVCollide( iModel );
 	if ( !pCollide )
@@ -1238,7 +1250,7 @@ void PrecacheGibsForModel( int iModel )
 	while ( !pParse->Finished() )
 	{
 		const char *pBlock = pParse->GetCurrentBlockName();
-		if ( !strcmpi( pBlock, "break" ) )
+		if ( !strcmpi( pBlock, pszBlockName ) )
 		{
 			breakmodel_t breakModel;
 			pParse->ParseCustom( &breakModel, &breakParser );
@@ -1252,6 +1264,12 @@ void PrecacheGibsForModel( int iModel )
 
 	// Destroy the parser.
 	physcollision->VPhysicsKeyParserDestroy( pParse );
+}
+
+void PrecacheGibsForModel( int iModel )
+{
+	VPROF_BUDGET( "PrecacheGibsForModel", VPROF_BUDGETGROUP_PLAYER );
+	PrecachePropsForModel( iModel, "break" );
 }
 
 //-----------------------------------------------------------------------------
@@ -1277,7 +1295,7 @@ void BuildGibList( CUtlVector<breakmodel_t> &list, int modelindex, float defBurs
 //			bIgnoreGibLImit - 
 //			defaultLocation - 
 //-----------------------------------------------------------------------------
-CBaseEntity *CreateGibsFromList( CUtlVector<breakmodel_t> &list, int modelindex, IPhysicsObject *pPhysics, const breakablepropparams_t &params, CBaseEntity *pEntity, int iPrecomputedBreakableCount, bool bIgnoreGibLimit, bool defaultLocation, CUtlVector<EHANDLE> *pGibList )
+CBaseEntity *CreateGibsFromList( CUtlVector<breakmodel_t> &list, int modelindex, IPhysicsObject *pPhysics, const breakablepropparams_t &params, CBaseEntity *pEntity, int iPrecomputedBreakableCount, bool bIgnoreGibLimit, bool defaultLocation, CUtlVector<EHANDLE> *pGibList, bool bBurning )
 {
     // Check for prop breakable count reset. 
 	int nPropCount = props_break_max_pieces_perframe.GetInt(); 
@@ -1320,7 +1338,7 @@ CBaseEntity *CreateGibsFromList( CUtlVector<breakmodel_t> &list, int modelindex,
 	if ( !pCollide )
 		return NULL;
 
-	int nSkin = 0;
+	int nSkin = params.nDefaultSkin;
 	CBaseEntity *pOwnerEntity = pEntity;
 	CBaseAnimating *pOwnerAnim = NULL;
 	if ( pPhysics )
@@ -1445,12 +1463,21 @@ CBaseEntity *CreateGibsFromList( CUtlVector<breakmodel_t> &list, int modelindex,
 			}
 			Vector objectVelocity = params.velocity;
 
-			float flScale = VectorNormalize( objectVelocity );
-			objectVelocity.x += RandomFloat( -1.f, 1.0f );
-			objectVelocity.y += RandomFloat( -1.0f, 1.0f );
-			objectVelocity.z += RandomFloat( 0.0f, 1.0f );
-			VectorNormalize( objectVelocity );
-			objectVelocity *= flScale;
+			Vector gibVelocity = vec3_origin;
+			if ( !list[i].velocity.IsZero() )
+			{
+				VectorRotate( list[i].velocity, matrix, gibVelocity );
+				objectVelocity = gibVelocity;
+			}
+			else
+			{
+				float flScale = VectorNormalize( objectVelocity );
+				objectVelocity.x += RandomFloat( -1.f, 1.0f );
+				objectVelocity.y += RandomFloat( -1.0f, 1.0f );
+				objectVelocity.z += RandomFloat( 0.0f, 1.0f );
+				VectorNormalize( objectVelocity );
+				objectVelocity *= flScale;
+			}
 
 			if (pPhysics)
 			{
@@ -1476,6 +1503,13 @@ CBaseEntity *CreateGibsFromList( CUtlVector<breakmodel_t> &list, int modelindex,
 				if ( GetGibManager() )
 				{
 					GetGibManager()->AddGibToLRU( pBreakable->GetBaseAnimating() );
+				}
+#endif
+
+#ifndef GAME_DLL
+				if ( bBurning && cl_burninggibs.GetBool() )
+				{
+					pBreakable->ParticleProp()->Create( "burninggibs", PATTACH_POINT_FOLLOW, "bloodpoint" );
 				}
 #endif
 				if ( pOwnerEntity && pOwnerEntity->IsEffectActive( EF_NOSHADOW ) )

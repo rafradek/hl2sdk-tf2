@@ -1,12 +1,11 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for HL2.
 //
 //=============================================================================//
 
-#include "weapon_hl2mpbasehlmpcombatweapon.h"
-
 #include "cbase.h"
+#include "weapon_hl2mpbasehlmpcombatweapon.h"
 #include "hl2mp_player.h"
 #include "globalstate.h"
 #include "game.h"
@@ -20,7 +19,7 @@
 #include "weapon_hl2mpbase.h"
 #include "grenade_satchel.h"
 #include "eventqueue.h"
-#include "GameStats.h"
+#include "gamestats.h"
 
 #include "engine/IEngineSound.h"
 #include "SoundEmitterSystem/isoundemittersystembase.h"
@@ -44,8 +43,8 @@ LINK_ENTITY_TO_CLASS( info_player_combine, CPointEntity );
 LINK_ENTITY_TO_CLASS( info_player_rebel, CPointEntity );
 
 IMPLEMENT_SERVERCLASS_ST(CHL2MP_Player, DT_HL2MP_Player)
-	SendPropAngle( SENDINFO_VECTORELEM2(m_angEyeAngles, 0, x), 11, SPROP_CHANGES_OFTEN ),
-	SendPropAngle( SENDINFO_VECTORELEM2(m_angEyeAngles, 1, y), 11, SPROP_CHANGES_OFTEN ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 0), 11, SPROP_CHANGES_OFTEN ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_angEyeAngles, 1), 11, SPROP_CHANGES_OFTEN ),
 	SendPropEHandle( SENDINFO( m_hRagdoll ) ),
 	SendPropInt( SENDINFO( m_iSpawnInterpCounter), 4 ),
 	SendPropInt( SENDINFO( m_iPlayerSoundType), 3 ),
@@ -95,7 +94,7 @@ const char *g_ppszRandomCombineModels[] =
 
 #define HL2MPPLAYER_PHYSDAMAGE_SCALE 4.0f
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #pragma warning( disable : 4355 )
 #endif
 
@@ -306,8 +305,6 @@ void CHL2MP_Player::Spawn(void)
 		
 		GiveDefaultItems();
 	}
-
-	RemoveEffects( EF_NOINTERP );
 
 	SetNumAnimOverlays( 3 );
 	ResetAnimation();
@@ -599,7 +596,7 @@ void CHL2MP_Player::FireBullets ( const FireBulletsInfo_t &info )
 
 	if ( pWeapon )
 	{
-		modinfo.m_iPlayerDamage = modinfo.m_iDamage = pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
+		modinfo.m_iPlayerDamage = modinfo.m_flDamage = pWeapon->GetHL2MPWpnData().m_iPlayerDamage;
 	}
 
 	NoteWeaponFired();
@@ -1544,7 +1541,7 @@ CHL2MPPlayerStateInfo *CHL2MP_Player::State_LookupInfo( HL2MPPlayerState state )
 		{ STATE_OBSERVER_MODE,	"STATE_OBSERVER_MODE",	&CHL2MP_Player::State_Enter_OBSERVER_MODE,	NULL, &CHL2MP_Player::State_PreThink_OBSERVER_MODE }
 	};
 
-	for ( size_t i=0; i < ARRAYSIZE( playerStateInfos ); i++ )
+	for ( int i=0; i < ARRAYSIZE( playerStateInfos ); i++ )
 	{
 		if ( playerStateInfos[i].m_iPlayerState == state )
 			return &playerStateInfos[i];

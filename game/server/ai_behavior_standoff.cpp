@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Combat behaviors for AIs in a relatively self-preservationist mode.
 //			Lots of cover taking and attempted shots out of cover.
@@ -1110,7 +1110,7 @@ void CAI_MappedActivityBehavior_Temporary::UpdateTranslateActivityMap()
 	
 	CBaseCombatWeapon *pWeapon = GetOuter()->GetActiveWeapon();
 	const char *pszWeaponClass = ( pWeapon ) ? pWeapon->GetClassname() : "";
-	for ( size_t i = 0; i < ARRAYSIZE(mappings); i++ )
+	for ( int i = 0; i < ARRAYSIZE(mappings); i++ )
 	{
 		if ( !mappings[i].pszWeapon || stricmp( mappings[i].pszWeapon, pszWeaponClass ) == 0 )
 		{

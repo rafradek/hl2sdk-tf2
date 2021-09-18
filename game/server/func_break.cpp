@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements breakables and pushables. func_breakable is a bmodel
 //			that breaks into pieces after taking damage.
@@ -62,11 +62,11 @@ extern Vector		g_vecAttackDir;
 		"item_rpg_round",			// 12
 		"unused (item_smg1_grenade) 13",// 13
 		"item_box_sniper_rounds",	// 14
-		"unused (?) 15",			// 15
+		"unused (???"") 15",		// 15 - split into two strings to avoid trigraph warning 
 		"weapon_stunstick",			// 16
 		"unused (weapon_ar1) 17",	// 17
 		"weapon_ar2",				// 18
-		"unused (?) 19",				// 19
+		"unused (???"") 19",		// 19 - split into two strings to avoid trigraph warning 
 		"weapon_rpg",				// 20
 		"weapon_smg1",				// 21
 		"unused (weapon_smg2) 22",	// 22
@@ -218,13 +218,13 @@ bool CBreakable::KeyValue( const char *szKeyName, const char *szValue )
 	else if (FStrEq(szKeyName, "spawnobject") )
 	{
 		int object = atoi( szValue );
-		if ( object > 0 && object < (int)ARRAYSIZE(pSpawnObjects) )
+		if ( object > 0 && object < ARRAYSIZE(pSpawnObjects) )
 			m_iszSpawnObject = MAKE_STRING( pSpawnObjects[object] );
 	}
 	else if (FStrEq(szKeyName, "propdata") )
 	{
 		int pdata = atoi( szValue );
-		if ( pdata > 0 && pdata < (int)ARRAYSIZE(pFGDPropData) )
+		if ( pdata > 0 && pdata < ARRAYSIZE(pFGDPropData) )
 		{
 			m_iszPropData = MAKE_STRING( pFGDPropData[pdata] );
 		}
@@ -467,7 +467,7 @@ void CBreakable::Precache( void )
 	else
 	{
 		// Actually, precache all possible objects...
-		for ( int i = 0; i < (int)ARRAYSIZE(pSpawnObjects) ; ++i )
+		for ( int i = 0; i < ARRAYSIZE(pSpawnObjects) ; ++i )
 		{
 			if ( !pSpawnObjects[ i ] )
 				continue;
@@ -690,7 +690,7 @@ bool CBreakable::UpdateHealth( int iNewHealth, CBaseEntity *pActivator )
 		}
 
 		// Output the new health as a percentage of max health [0..1]
-		float flRatio = clamp( (float)m_iHealth / (float)m_iMaxHealth, 0, 1 );
+		float flRatio = clamp( (float)m_iHealth / (float)m_iMaxHealth, 0.f, 1.f );
 		m_OnHealthChanged.Set( flRatio, pActivator, this );
 
 		if ( m_iHealth <= 0 )
@@ -733,7 +733,7 @@ void CBreakable::Break( CBaseEntity *pBreaker )
 }
 
 
-void CBreakable::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr )
+void CBreakable::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator )
 {
 	// random spark if this is a 'computer' object
 	if (random->RandomInt(0,1) )
@@ -746,18 +746,15 @@ void CBreakable::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir,
 
 				EmitSound( "Breakable.Computer" );
 			}
-				break;
+			break;
 			
 			case matUnbreakableGlass:
 				g_pEffects->Ricochet( ptr->endpos, (vecDir*-1.0f) );
-				break;
-
-			default:
-				break;
+			break;
 		}
 	}
 
-	BaseClass::TraceAttack( info, vecDir, ptr );
+	BaseClass::TraceAttack( info, vecDir, ptr, pAccumulator );
 }
 
 
@@ -820,8 +817,6 @@ void CBreakable::VPhysicsCollision( int index, gamevcollisionevent_t *pEvent )
 //-----------------------------------------------------------------------------
 int CBreakable::OnTakeDamage( const CTakeDamageInfo &info )
 {
-	Vector	vecTemp;
-
 	CTakeDamageInfo subInfo = info;
 
 	// If attacker can't do at least the min required damage to us, don't take any damage from them
@@ -834,8 +829,6 @@ int CBreakable::OnTakeDamage( const CTakeDamageInfo &info )
 		m_bTookPhysicsDamage = false;
 		return 1;
 	}
-
-	vecTemp = subInfo.GetInflictor()->GetAbsOrigin() - WorldSpaceCenter();
 
 	if (!IsBreakable())
 		return 0;
@@ -1050,7 +1043,7 @@ void CBreakable::Die( void )
 	CCollisionProperty *pCollisionProp = CollisionProp();
 
 	Vector vSize = pCollisionProp->OBBSize();
-	int iCount = (int)(( vSize[0] * vSize[1] + vSize[1] * vSize[2] + vSize[2] * vSize[0] ) / ( 3 * 12 * 12 ));
+	int iCount = ( vSize[0] * vSize[1] + vSize[1] * vSize[2] + vSize[2] * vSize[0] ) / ( 3 * 12 * 12 );
 
 	if ( iCount > func_break_max_pieces.GetInt() )
 	{
@@ -1066,7 +1059,7 @@ void CBreakable::Die( void )
 		}
 		else if ( m_PerformanceMode == PM_REDUCED_GIBS )
 		{
-			int iNewCount = (int)(iCount * func_break_reduction_factor.GetFloat());
+			int iNewCount = iCount * func_break_reduction_factor.GetFloat();
 			iCount = MAX( iNewCount, 1 );
 		}
 	}
@@ -1123,7 +1116,7 @@ void CBreakable::Die( void )
 
 	if ( Explodable() )
 	{
-		ExplosionCreate( vecSpot, pCollisionProp->GetCollisionAngles(), this, (int)GetExplosiveDamage(), (int)GetExplosiveRadius(), true );
+		ExplosionCreate( vecSpot, pCollisionProp->GetCollisionAngles(), this, GetExplosiveDamage(), GetExplosiveRadius(), true );
 	}
 }
 

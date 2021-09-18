@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -32,6 +32,7 @@ enum
 	SF_TRIG_PUSH_AFFECT_PLAYER_ON_LADDER	= 0x100,	// if pushed object is player on a ladder, then this disengages them from the ladder (HL2only)
 	SF_TRIG_TOUCH_DEBRIS 					= 0x400,	// Will touch physics debris objects
 	SF_TRIGGER_ONLY_NPCS_IN_VEHICLES		= 0X800,	// *if* NPCs can fire this trigger, only NPCs in vehicles do so (respects player ally flag too)
+	SF_TRIGGER_DISALLOW_BOTS                = 0x1000,   // Bots are not allowed to fire this trigger
 };
 
 // DVS TODO: get rid of CBaseToggle
@@ -67,6 +68,8 @@ public:
 	virtual bool PassesTriggerFilters(CBaseEntity *pOther);
 	virtual void StartTouch(CBaseEntity *pOther);
 	virtual void EndTouch(CBaseEntity *pOther);
+	virtual void StartTouchAll() {}
+	virtual void EndTouchAll() {}
 	bool IsTouching( CBaseEntity *pOther );
 
 	CBaseEntity *GetTouchedEntityOfType( const char *sClassName );
@@ -75,6 +78,8 @@ public:
 
 	// by default, triggers don't deal with TraceAttack
 	void TraceAttack(CBaseEntity *pAttacker, float flDamage, const Vector &vecDir, trace_t *ptr, int bitsDamageType) {}
+
+	bool PointIsWithin( const Vector &vecPoint );
 
 	bool		m_bDisabled;
 	string_t	m_iFilterName;
@@ -161,7 +166,21 @@ protected:
 // Purpose: Hurts anything that touches it. If the trigger has a targetname,
 //			firing it will toggle state.
 //-----------------------------------------------------------------------------
-class CTriggerHurt : public CBaseTrigger
+
+// This class is to get around the fact that DEFINE_FUNCTION doesn't like multiple inheritance
+class CTriggerHurtShim : public CBaseTrigger
+{
+	virtual void RadiationThink( void ) = 0;
+	virtual void HurtThink( void ) = 0;
+
+public:
+
+	void RadiationThinkShim( void ){ RadiationThink(); }
+	void HurtThinkShim( void ){ HurtThink(); }
+};
+
+DECLARE_AUTO_LIST( ITriggerHurtAutoList );
+class CTriggerHurt : public CTriggerHurtShim, public ITriggerHurtAutoList
 {
 public:
 	CTriggerHurt()
@@ -170,7 +189,7 @@ public:
 		m_flDamageCap = 20.0f;
 	}
 
-	DECLARE_CLASS( CTriggerHurt, CBaseTrigger );
+	DECLARE_CLASS( CTriggerHurt, CTriggerHurtShim );
 
 	void Spawn( void );
 	void RadiationThink( void );
@@ -203,5 +222,7 @@ public:
 
 	CUtlVector<EHANDLE>	m_hurtEntities;
 };
+
+bool IsTakingTriggerHurtDamageAtPoint( const Vector &vecPoint );
 
 #endif // TRIGGERS_H

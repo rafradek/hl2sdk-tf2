@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -543,7 +543,7 @@ bool CAI_FollowBehavior::IsFollowGoalInRange( float tolerance, float zTolerance,
 	// Increase Z tolerance slightly as XY distance decreases
 	float flToleranceSq = (tolerance*tolerance);
 	float flIncreaseRange = flToleranceSq * 0.25;
-	zTolerance += zTolerance * clamp((distanceSq / flIncreaseRange), 0, 1 );
+	zTolerance += zTolerance * clamp((distanceSq / flIncreaseRange), 0.f, 1.f );
 	if ( fabs( origin.z - goal.z ) > zTolerance )
 		return false;
 
@@ -2542,7 +2542,7 @@ AI_FollowFormation_t *AIGetFormation( AI_Formations_t formation )
 {
 	if ( formation < 0 )
 		formation = (AI_Formations_t)0;
-	else if ( (size_t)formation >= ARRAYSIZE( g_AI_Formations ) )
+	else if ( formation >= ARRAYSIZE( g_AI_Formations ) )
 		formation = (AI_Formations_t)(ARRAYSIZE( g_AI_Formations ) - 1 );
 		
 	return g_AI_Formations[formation];

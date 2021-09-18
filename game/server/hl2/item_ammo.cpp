@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: The various ammo types for HL2	
 //
@@ -32,7 +32,7 @@ int ITEM_GiveAmmo( CBasePlayer *pPlayer, float flCount, const char *pszAmmoName,
 	// Don't give out less than 1 of anything.
 	flCount = MAX( 1.0f, flCount );
 
-	return pPlayer->GiveAmmo( (int)flCount, iAmmoType, bSuppressSound );
+	return pPlayer->GiveAmmo( flCount, iAmmoType, bSuppressSound );
 }
 
 // ========================================================================

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Implements two types of doors: linear and rotating.
 //
@@ -20,6 +20,10 @@
 #ifdef CSTRIKE_DLL
 #include "KeyValues.h"
 #endif
+
+#ifdef TF_DLL
+#include "tf_gamerules.h"
+#endif // TF_DLL
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -220,11 +224,11 @@ bool CBaseDoor::KeyValue( const char *szKeyName, const char *szValue )
 {
 	if (FStrEq(szKeyName, "locked_sentence"))
 	{
-		m_bLockedSentence = atoi(szValue);
+		m_bLockedSentence = atof(szValue);
 	}
 	else if (FStrEq(szKeyName, "unlocked_sentence"))
 	{
-		m_bUnlockedSentence = atoi(szValue);
+		m_bUnlockedSentence = atof(szValue);
 	}
 	else
 		return BaseClass::KeyValue( szKeyName, szValue );
@@ -332,6 +336,16 @@ void CBaseDoor::Spawn()
 	}
 
 	CreateVPhysics();
+
+#ifdef TF_DLL
+	if ( TFGameRules() && TFGameRules()->IsMultiplayer() )
+	{
+		// Never block doors in TF2 - to prevent various exploits.
+		m_bIgnoreNonPlayerEntsOnBlock = true;
+	}
+#else
+	m_bIgnoreNonPlayerEntsOnBlock = false;
+#endif // TF_DLL
 }
 
 void CBaseDoor::MovingSoundThink( void )
@@ -483,8 +497,6 @@ void CBaseDoor::Activate( void )
 		break;
 	case TS_AT_BOTTOM:
 		UpdateAreaPortals( false );
-		break;
-	default:
 		break;
 	}
 
@@ -1193,6 +1205,11 @@ void CBaseDoor::Blocked( CBaseEntity *pOther )
 		{
 			pOther->TakeDamage( CTakeDamageInfo( this, this, m_flBlockDamage, DMG_CRUSH ) );
 		}
+	}
+	// If set, ignore non-player ents that block us.  Mainly of use in multiplayer to prevent exploits.
+	else if ( pOther && !pOther->IsPlayer() && m_bIgnoreNonPlayerEntsOnBlock )
+	{
+		return;
 	}
 
 	// If we're set to force ourselves closed, keep going

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -15,15 +15,15 @@
 #include "networkvar.h"
 
 #ifdef DEBUG
-#ifdef _MSC_VER
+#ifdef _WIN32
 #pragma warning(push)
-#endif
+#endif // _WIN32
 #include <typeinfo>
-#ifdef _MSC_VER
+#ifdef _WIN32
 #pragma warning(pop)
 #pragma warning(disable:4290)
-#endif
-#endif
+#endif // _WIN32
+#endif // DEBUG
 
 #if defined( _WIN32 )
 #pragma once
@@ -278,28 +278,28 @@ public:
 	{
 		if ( condition >= ID_SPACE_OFFSET && condition < ID_SPACE_OFFSET + 10000 ) // it's local to us
 			condition = GetClassScheduleIdSpace()->ConditionLocalToGlobal( condition );
-		CAI_ComponentWithOuter<NPC_CLASS, CAI_BehaviorBase>::GetOuter()->SetCondition( condition );
+		this->GetOuter()->SetCondition( condition );
 	}
 
 	bool HasCondition( int condition )
 	{
 		if ( condition >= ID_SPACE_OFFSET && condition < ID_SPACE_OFFSET + 10000 ) // it's local to us
 			condition = GetClassScheduleIdSpace()->ConditionLocalToGlobal( condition );
-		return CAI_ComponentWithOuter<NPC_CLASS, CAI_BehaviorBase>::GetOuter()->HasCondition( condition );
+		return this->GetOuter()->HasCondition( condition );
 	}
 
 	bool HasInterruptCondition( int condition )
 	{
 		if ( condition >= ID_SPACE_OFFSET && condition < ID_SPACE_OFFSET + 10000 ) // it's local to us
 			condition = GetClassScheduleIdSpace()->ConditionLocalToGlobal( condition );
-		return CAI_ComponentWithOuter<NPC_CLASS, CAI_BehaviorBase>::GetOuter()->HasInterruptCondition( condition );
+		return this->GetOuter()->HasInterruptCondition( condition );
 	}
 
 	void ClearCondition( int condition )
 	{
 		if ( condition >= ID_SPACE_OFFSET && condition < ID_SPACE_OFFSET + 10000 ) // it's local to us
 			condition = GetClassScheduleIdSpace()->ConditionLocalToGlobal( condition );
-		CAI_ComponentWithOuter<NPC_CLASS, CAI_BehaviorBase>::GetOuter()->ClearCondition( condition );
+		this->GetOuter()->ClearCondition( condition );
 	}
 
 protected:
@@ -314,7 +314,7 @@ protected:
 	}
 	virtual CAI_ClassScheduleIdSpace *GetClassScheduleIdSpace()
 	{
-		return CAI_ComponentWithOuter<NPC_CLASS, CAI_BehaviorBase>::GetOuter()->GetClassScheduleIdSpace();
+		return this->GetOuter()->GetClassScheduleIdSpace();
 	}
 
 	static CAI_ClassScheduleIdSpace &AccessClassScheduleIdSpaceDirect()

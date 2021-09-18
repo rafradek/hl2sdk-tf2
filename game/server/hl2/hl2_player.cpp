@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:		Player for HL2.
 //
@@ -43,13 +43,17 @@
 #include "prop_combine_ball.h"
 #include "datacache/imdlcache.h"
 #include "eventqueue.h"
-#include "GameStats.h"
+#include "gamestats.h"
 #include "filters.h"
 #include "tier0/icommandline.h"
 
 #ifdef HL2_EPISODIC
 #include "npc_alyx_episodic.h"
 #endif
+
+#ifdef PORTAL
+#include "portal_player.h"
+#endif // PORTAL
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -163,7 +167,9 @@ bool Flashlight_UseLegacyVersion( void )
 		if ( UTIL_GetModDir( modDir, sizeof(modDir) ) == false )
 			return false;
 
-		g_bUseLegacyFlashlight = ( !Q_strcmp( modDir, "hl2" ) || !Q_strcmp( modDir, "episodic" ) );
+		g_bUseLegacyFlashlight = ( !Q_strcmp( modDir, "hl2" ) ||
+					   !Q_strcmp( modDir, "episodic" ) ||
+					   !Q_strcmp( modDir, "lostcoast" ) || !Q_strcmp( modDir, "hl1" ));
 
 		g_bCacheLegacyFlashlightStatus = false;
 	}
@@ -203,6 +209,9 @@ public:
 	void InputEnableCappedPhysicsDamage( inputdata_t &inputdata );
 	void InputDisableCappedPhysicsDamage( inputdata_t &inputdata );
 	void InputSetLocatorTargetEntity( inputdata_t &inputdata );
+#ifdef PORTAL
+	void InputSuppressCrosshair( inputdata_t &inputdata );
+#endif // PORTAL2
 
 	void Activate ( void );
 
@@ -807,7 +816,7 @@ void CHL2_Player::PreThink(void)
 
 		if (vel)
 		{
-			m_iTrain = TrainSpeed((int)pTrain->m_flSpeed, (int)((CFuncTrackTrain*)pTrain)->GetMaxSpeed());
+			m_iTrain = TrainSpeed(pTrain->m_flSpeed, ((CFuncTrackTrain*)pTrain)->GetMaxSpeed());
 			m_iTrain |= TRAIN_ACTIVE|TRAIN_NEW;
 		}
 	} 
@@ -1315,7 +1324,7 @@ void CHL2_Player::StartZooming( void )
 //-----------------------------------------------------------------------------
 void CHL2_Player::StopZooming( void )
 {
-	int iFOV = (int)GetZoomOwnerDesiredFOV( m_hZoomOwner );
+	int iFOV = GetZoomOwnerDesiredFOV( m_hZoomOwner );
 
 	if ( SetFOV( this, iFOV, 0.2f ) )
 	{
@@ -1649,7 +1658,7 @@ void CHL2_Player::CommanderExecute( CommanderCommand_t command )
 	//---------------------------------
 	// If the trace hits an NPC, send all ally NPCs a "target" order. Always
 	// goes to targeted one first
-#ifdef DEBUG
+#ifdef DBGFLAG_ASSERT
 	int nAIs = g_AI_Manager.NumAIs();
 #endif
 	CAI_BaseNPC * pTargetNpc = (goal.m_pGoalEntity) ? goal.m_pGoalEntity->MyNPCPointer() : NULL;
@@ -1975,7 +1984,7 @@ bool CHL2_Player::ApplyBattery( float powerMultiplier )
 		int pct;
 		char szcharge[64];
 
-		IncrementArmorValue( (int)(sk_battery.GetFloat() * powerMultiplier), (int)MAX_NORMAL_BATTERY );
+		IncrementArmorValue( sk_battery.GetFloat() * powerMultiplier, MAX_NORMAL_BATTERY );
 
 		CPASAttenuationFilter filter( this, "ItemBattery.Touch" );
 		EmitSound( filter, entindex(), "ItemBattery.Touch" );
@@ -2804,7 +2813,7 @@ void CHL2_Player::PlayerUse ( void )
 				if ( pTrain && !(m_nButtons & IN_JUMP) && (GetFlags() & FL_ONGROUND) && (pTrain->ObjectCaps() & FCAP_DIRECTIONAL_USE) && pTrain->OnControls(this) )
 				{
 					m_afPhysicsFlags |= PFLAG_DIROVERRIDE;
-					m_iTrain = TrainSpeed((int)pTrain->m_flSpeed, (int)((CFuncTrackTrain*)pTrain)->GetMaxSpeed());
+					m_iTrain = TrainSpeed(pTrain->m_flSpeed, ((CFuncTrackTrain*)pTrain)->GetMaxSpeed());
 					m_iTrain |= TRAIN_NEW;
 					EmitSound( "HL2Player.TrainUse" );
 					return;
@@ -3145,11 +3154,6 @@ float CHL2_Player::GetHeldObjectMass( IPhysicsObject *pHeldObject )
 	return mass;
 }
 
-CBaseEntity	*CHL2_Player::GetHeldObject( void )
-{
-	return PhysCannonGetHeldEntity( GetActiveWeapon() );
-}
-
 //-----------------------------------------------------------------------------
 // Purpose: Force the player to drop any physics objects he's carrying
 //-----------------------------------------------------------------------------
@@ -3222,8 +3226,8 @@ void CHL2_Player::UpdateClientData( void )
 		CSingleUserRecipientFilter user( this );
 		user.MakeReliable();
 		UserMessageBegin( user, "Damage" );
-			WRITE_BYTE( (int)m_DmgSave );
-			WRITE_BYTE( (int)m_DmgTake );
+			WRITE_BYTE( m_DmgSave );
+			WRITE_BYTE( m_DmgTake );
 			WRITE_LONG( visibleDamageBits );
 			WRITE_FLOAT( damageOrigin.x );	//BUG: Should be fixed point (to hud) not floats
 			WRITE_FLOAT( damageOrigin.y );	//BUG: However, the HUD does _not_ implement bitfield messages (yet)
@@ -3779,6 +3783,9 @@ BEGIN_DATADESC( CLogicPlayerProxy )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"EnableCappedPhysicsDamage", InputEnableCappedPhysicsDamage ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"DisableCappedPhysicsDamage", InputDisableCappedPhysicsDamage ),
 	DEFINE_INPUTFUNC( FIELD_STRING,	"SetLocatorTargetEntity", InputSetLocatorTargetEntity ),
+#ifdef PORTAL
+	DEFINE_INPUTFUNC( FIELD_VOID,	"SuppressCrosshair", InputSuppressCrosshair ),
+#endif // PORTAL
 	DEFINE_FIELD( m_hPlayer, FIELD_EHANDLE ),
 END_DATADESC()
 
@@ -3911,3 +3918,13 @@ void CLogicPlayerProxy::InputSetLocatorTargetEntity( inputdata_t &inputdata )
 	pPlayer->SetLocatorTargetEntity(pTarget);
 }
 
+#ifdef PORTAL
+void CLogicPlayerProxy::InputSuppressCrosshair( inputdata_t &inputdata )
+{
+	if( m_hPlayer == NULL )
+		return;
+
+	CPortal_Player *pPlayer = ToPortalPlayer(m_hPlayer.Get());
+	pPlayer->SuppressCrosshair( true );
+}
+#endif // PORTAL

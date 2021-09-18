@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Defines a class for objects that break after taking a certain amount
 //			of damage.
@@ -63,7 +63,7 @@ public:
 	virtual int OnTakeDamage( const CTakeDamageInfo &info );
 
 	// To spark when hit
-	void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 
 	bool IsBreakable( void );
 	bool SparkWhenHit( void );
@@ -94,7 +94,7 @@ public:
 	float			GetDmgModClub( void ) { return m_flDmgModClub; }
 	float			GetDmgModExplosive( void ) { return m_flDmgModExplosive; }
 	void			SetExplosiveRadius( float flRadius ) { m_explodeRadius = flRadius; }
-	void			SetExplosiveDamage( float flDamage ) { m_ExplosionMagnitude = (int)flDamage; }
+	void			SetExplosiveDamage( float flDamage ) { m_ExplosionMagnitude = flDamage; }
 	float			GetExplosiveRadius( void ) { return m_explodeRadius; }
 	float			GetExplosiveDamage( void ) { return m_ExplosionMagnitude; }
 	void			SetPhysicsDamageTable( string_t iszTableName ) { m_iszPhysicsDamageTableName = iszTableName; }

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -139,6 +139,7 @@ protected:
 	EHANDLE			m_hDamageBonusProvider;	// Who gave us the ability to do extra damage?
 	bool			m_bForceFriendlyFire;	// Ideally this would be a dmg type, but we can't add more
 
+	// AlliedModders - This member only exists after the 2015 SDK update.
 	float			m_flDamageForForce;
 	
 	ECritType		m_eCritType;

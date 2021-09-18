@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Physics cannon
 //
@@ -9,12 +9,12 @@
 #ifdef CLIENT_DLL
 	#include "c_hl2mp_player.h"
 	#include "vcollide_parse.h"
-	#include "engine/IVDebugOverlay.h"
+	#include "engine/ivdebugoverlay.h"
 	#include "iviewrender_beams.h"
 	#include "beamdraw.h"
 	#include "c_te_effect_dispatch.h"
 	#include "model_types.h"
-	#include "ClientEffectPrecacheSystem.h"
+	#include "clienteffectprecachesystem.h"
 	#include "fx_interpvalue.h"
 #else
 	#include "hl2mp_player.h"
@@ -50,7 +50,7 @@
 
 #define	SPRITE_SCALE	128.0f
 
-//static const char *s_pWaitForUpgradeContext = "WaitForUpgrade";
+static const char *s_pWaitForUpgradeContext = "WaitForUpgrade";
 
 ConVar	g_debug_physcannon( "g_debug_physcannon", "0", FCVAR_REPLICATED | FCVAR_CHEAT );
 
@@ -191,7 +191,7 @@ static QAngle AlignAngles( const QAngle &angles, float cosineAlignAngle )
 }
 
 
-/*static void TraceCollideAgainstBBox( const CPhysCollide *pCollide, const Vector &start, const Vector &end, const QAngle &angles, const Vector &boxOrigin, const Vector &mins, const Vector &maxs, trace_t *ptr )
+static void TraceCollideAgainstBBox( const CPhysCollide *pCollide, const Vector &start, const Vector &end, const QAngle &angles, const Vector &boxOrigin, const Vector &mins, const Vector &maxs, trace_t *ptr )
 {
 	physcollision->TraceBox( boxOrigin, boxOrigin + (start-end), mins, maxs, pCollide, start, angles, ptr );
 
@@ -202,7 +202,7 @@ static QAngle AlignAngles( const QAngle &angles, float cosineAlignAngle )
 		ptr->plane.dist = -ptr->plane.dist;
 		ptr->plane.normal *= -1;
 	}
-}*/
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Computes a local matrix for the player clamped to valid carry ranges
@@ -1271,9 +1271,9 @@ BEGIN_NETWORK_TABLE( CWeaponPhysCannon, DT_WeaponPhysCannon )
 	SendPropBool( SENDINFO( m_bActive ) ),
 	SendPropEHandle( SENDINFO( m_hAttachedObject ) ),
 	SendPropVector(SENDINFO( m_attachedPositionObjectSpace ), -1, SPROP_COORD),
-	SendPropAngle( SENDINFO_VECTORELEM2(m_attachedAnglesPlayerSpace, 0, x ), 11 ),
-	SendPropAngle( SENDINFO_VECTORELEM2(m_attachedAnglesPlayerSpace, 1, y ), 11 ),
-	SendPropAngle( SENDINFO_VECTORELEM2(m_attachedAnglesPlayerSpace, 2, z ), 11 ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_attachedAnglesPlayerSpace, 0 ), 11 ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_attachedAnglesPlayerSpace, 1 ), 11 ),
+	SendPropAngle( SENDINFO_VECTORELEM(m_attachedAnglesPlayerSpace, 2 ), 11 ),
 	SendPropInt( SENDINFO( m_EffectState ) ),
 	SendPropBool( SENDINFO( m_bOpen ) ),
 #endif
@@ -2484,7 +2484,7 @@ void CWeaponPhysCannon::UpdateElementPosition( void )
 
 	float flElementPosition = m_ElementParameter.Interp( gpGlobals->curtime );
 
-	if ( IsCarriedByLocalPlayer() )
+	if ( ShouldDrawUsingViewModel() )
 	{
 		if ( pOwner != NULL )	
 		{
@@ -2601,7 +2601,7 @@ void CWeaponPhysCannon::DoEffectIdle( void )
 
 	StartEffects();
 
-	//if ( IsCarriedByLocalPlayer() )
+	//if ( ShouldDrawUsingViewModel() )
 	{
 		// Turn on the glow sprites
 		for ( int i = PHYSCANNON_GLOW1; i < (PHYSCANNON_GLOW1+NUM_GLOW_SPRITES); i++ )
@@ -3033,7 +3033,7 @@ void CWeaponPhysCannon::StartEffects( void )
 		m_Parameters[i].GetAlpha().SetAbsolute( 64.0f );
 		
 		// Different for different views
-		if ( IsCarriedByLocalPlayer() )
+		if ( ShouldDrawUsingViewModel() )
 		{
 			m_Parameters[i].SetAttachment( LookupAttachment( attachNamesGlow[i-PHYSCANNON_GLOW1] ) );
 		}
@@ -3110,7 +3110,7 @@ void CWeaponPhysCannon::DoEffectReady( void )
 #ifdef CLIENT_DLL
 
 	// Special POV case
-	if ( IsCarriedByLocalPlayer() )
+	if ( ShouldDrawUsingViewModel() )
 	{
 		//Turn on the center sprite
 		m_Parameters[PHYSCANNON_CORE].GetScale().InitFromCurrent( 14.0f, 0.2f );
@@ -3152,7 +3152,7 @@ void CWeaponPhysCannon::DoEffectHolding( void )
 
 #ifdef CLIENT_DLL
 
-	if ( IsCarriedByLocalPlayer() )
+	if ( ShouldDrawUsingViewModel() )
 	{
 		// Scale up the center sprite
 		m_Parameters[PHYSCANNON_CORE].GetScale().InitFromCurrent( 16.0f, 0.2f );
@@ -3414,7 +3414,7 @@ void CWeaponPhysCannon::GetEffectParameters( EffectType_t effectID, color32 &col
 	QAngle	angles;
 
 	// Format for first-person
-	if ( IsCarriedByLocalPlayer() )
+	if ( ShouldDrawUsingViewModel() )
 	{
 		CBasePlayer *pOwner = ToBasePlayer( GetOwner() );
 		

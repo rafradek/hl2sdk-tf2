@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,8 +10,7 @@
 #include "iscenetokenprocessor.h"
 #include "scenefilecache/SceneImageFile.h"
 
-//#include "lzma/lzma.h"
-extern unsigned char *LZMA_Compress(unsigned char *buffer, unsigned int bufsize, unsigned int *outsize, unsigned int unk = 18);
+#include "lzma/lzma.h"
 
 #include "tier1/utlbuffer.h"
 #include "tier1/UtlStringMap.h"
@@ -369,7 +368,7 @@ bool CSceneImage::CreateSceneImageFile( CUtlBuffer &targetBuffer, char const *pc
 
 	if ( !bQuiet )
 	{
-		Msg( "Scenes: String Table: %d bytes\n", stringOffsets.Count() * sizeof( int ) );
+		Msg( "Scenes: String Table: %llu bytes\n", (uint64)(stringOffsets.Count() * sizeof( int )) );
 		Msg( "Scenes: String Pool: %d bytes\n", stringPool.TellMaxPut() );
 	}
 

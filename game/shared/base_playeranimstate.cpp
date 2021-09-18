@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -65,7 +65,7 @@ CBasePlayerAnimState::CBasePlayerAnimState()
 	m_flEyePitch = 0.0f;
 	m_bCurrentFeetYawInitialized = false;
 	m_flCurrentTorsoYaw = 0.0f;
-	m_flCurrentTorsoYaw = TURN_NONE;
+	m_nTurningInPlace = TURN_NONE;
 	m_flMaxGroundSpeed = 0.0f;
 	m_flStoredCycle = 0.0f;
 
@@ -269,7 +269,7 @@ void CBasePlayerAnimState::ComputeMainSequence()
 	int animDesired = SelectWeightedSequence( TranslateActivity(idealActivity) );
 
 #if !defined( HL1_CLIENT_DLL ) && !defined ( HL1_DLL )
-	if ( pPlayer->GetSequenceActivity( pPlayer->GetSequence() ) == pPlayer->GetSequenceActivity( animDesired ) )
+	if ( !ShouldResetMainSequence( pPlayer->GetSequence(), animDesired ) )
 		return;
 #endif
 
@@ -289,8 +289,13 @@ void CBasePlayerAnimState::ComputeMainSequence()
 #endif
 }
 
+bool CBasePlayerAnimState::ShouldResetMainSequence( int iCurrentSequence, int iNewSequence )
+{
+	if ( !GetOuter() )
+		return false;
 
-
+	return GetOuter()->GetSequenceActivity( iCurrentSequence ) != GetOuter()->GetSequenceActivity( iNewSequence );
+}
 
 
 void CBasePlayerAnimState::UpdateAimSequenceLayers(
@@ -362,10 +367,10 @@ void CBasePlayerAnimState::UpdateAimSequenceLayers(
 	}
 	
 	pDest0->m_flWeight *= flWeightScale * flAimSequenceWeight;
-	pDest0->m_flWeight = clamp( pDest0->m_flWeight, 0.0f, 1.0f );
+	pDest0->m_flWeight = clamp( (float)pDest0->m_flWeight, 0.0f, 1.0f );
 
 	pDest1->m_flWeight *= flWeightScale * flAimSequenceWeight;
-	pDest1->m_flWeight = clamp( pDest1->m_flWeight, 0.0f, 1.0f );
+	pDest1->m_flWeight = clamp( (float)pDest1->m_flWeight, 0.0f, 1.0f );
 
 	pDest0->m_flCycle = pDest1->m_flCycle = flCycle;
 }
@@ -391,7 +396,7 @@ void CBasePlayerAnimState::OptimizeLayerWeights( int iFirstLayer, int nLayers )
 	if ( pLayer->IsActive() && pLayer->m_flWeight > 0.0f )
 	{
 		pLayer->m_flWeight = 1.0f - totalWeight;
-		pLayer->m_flWeight = MAX(pLayer->m_flWeight, 0.0f);
+		pLayer->m_flWeight = MAX( (float)pLayer->m_flWeight, 0.0f);
 	}
 
 	// This part is just an optimization. Since we have the walk/run animations weighted on top of 
@@ -521,7 +526,7 @@ float CBasePlayerAnimState::CalcMovementPlaybackRate( bool *bIsMoving )
 		{
 			// Note this gets set back to 1.0 if sequence changes due to ResetSequenceInfo below
 			flReturnValue = speed / flGroundSpeed;
-			flReturnValue = clamp( flReturnValue, 0.01, 10 );	// don't go nuts here.
+			flReturnValue = clamp( flReturnValue, 0.01f, 10.f );	// don't go nuts here.
 		}
 		*bIsMoving = true;
 	}
@@ -721,7 +726,7 @@ void CBasePlayerAnimState::ComputePoseParam_BodyPitch( CStudioHdr *pStudioHdr )
 	{
 		flPitch -= 360.0f;
 	}
-	flPitch = clamp( flPitch, -90, 90 );
+	flPitch = clamp( flPitch, -90.f, 90.f );
 
 	// See if we have a blender for pitch
 	int pitch = GetOuter()->LookupPoseParameter( pStudioHdr, "body_pitch" );

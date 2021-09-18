@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose:
 //
@@ -10,20 +10,30 @@
 #ifndef TALKNPC_H
 #define TALKNPC_H
 
-#ifdef _LINUX
+#ifdef POSIX
 #undef time
 #include <time.h>
 #endif
 
-#if !defined _XBOX && defined _MSC_VER 
+#ifndef _XBOX
+#undef min
+#undef max
+#ifdef _WIN32
 #pragma warning(push)
+#endif // _WIN32
 #include <set>
+#ifdef _WIN32
 #pragma warning(pop)
-#endif
+#endif // _WIN32
+#endif // _XBOX
 
 #ifdef _WIN32
 #pragma once
 #endif
+
+// the include <set> monkey's with the MAX() define, unbreak it
+#undef MINMAX_H
+#include "minmax.h"
 
 #include "ai_playerally.h"
 
@@ -217,7 +227,7 @@ public:
 	int			m_nSpeak;						// number of times initiated talking
 	float		m_flNextIdleSpeechTime;
 
-	static const char *m_szFriends[TLK_CFRIENDS];		// array of friend names
+	static char *m_szFriends[TLK_CFRIENDS];		// array of friend names
 	CBaseEntity		*EnumFriends( CBaseEntity *pentPrevious, int listNumber, bool bTrace );
 
 	virtual int		FriendNumber( int arrayNumber )	{ return arrayNumber; }

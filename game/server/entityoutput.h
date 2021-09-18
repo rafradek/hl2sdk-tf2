@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Declares basic entity communications classes, for input/output of data
 //			between entities
@@ -128,7 +128,7 @@ public:
 // Template specializations for type Vector, so we can implement Get, Set, and Init differently.
 //
 template<>
-class CEntityOutputTemplate<Vector, FIELD_VECTOR> : public CBaseEntityOutput
+class CEntityOutputTemplate<class Vector, FIELD_VECTOR> : public CBaseEntityOutput
 {
 public:
 	void Init( const Vector &value )
@@ -150,7 +150,7 @@ public:
 
 
 template<>
-class CEntityOutputTemplate<Vector, FIELD_POSITION_VECTOR> : public CBaseEntityOutput
+class CEntityOutputTemplate<class Vector, FIELD_POSITION_VECTOR> : public CBaseEntityOutput
 {
 public:
 	void Init( const Vector &value )
