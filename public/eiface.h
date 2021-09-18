@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -73,10 +73,15 @@ typedef struct player_info_s player_info_t;
 #define DLLEXPORT /* */
 #endif
 
+// AlliedModders - Shim until all supported mods are using the SDK Base that has this
+#if 0
 #define INTERFACEVERSION_VENGINESERVER_VERSION_21	"VEngineServer021"
 #define INTERFACEVERSION_VENGINESERVER_VERSION_22	"VEngineServer022"
 #define INTERFACEVERSION_VENGINESERVER				"VEngineServer023"
 #define INTERFACEVERSION_VENGINESERVER_INT			23
+#else
+#define INTERFACEVERSION_VENGINESERVER				"VEngineServer023"
+#endif
 
 struct bbox_t
 {
@@ -180,7 +185,7 @@ public:
 	// Execute any commands currently in the command parser immediately (instead of once per frame)
 	virtual void		ServerExecute( void ) = 0;
 	// Issue the specified command to the specified client (mimics that client typing the command at the console).
-	virtual void		ClientCommand( edict_t *pEdict, const char *szFmt, ... ) = 0;
+	virtual void		ClientCommand( edict_t *pEdict, PRINTF_FORMAT_STRING const char *szFmt, ... ) = 0;
 
 	// Set the lightstyle to the specified value and network the change to any connected clients.  Note that val must not 
 	//  change place in memory (use MAKE_STRING) for anything that's not compiled into your mod.
@@ -205,10 +210,10 @@ public:
 	// SINGLE PLAYER/LISTEN SERVER ONLY (just matching the client .dll api for this)
 	// Prints the formatted string to the notification area of the screen ( down the right hand edge
 	//  numbered lines starting at position 0
-	virtual void		Con_NPrintf( int pos, const char *fmt, ... ) = 0;
+	virtual void		Con_NPrintf( int pos, PRINTF_FORMAT_STRING const char *fmt, ... ) = 0;
 	// SINGLE PLAYER/LISTEN SERVER ONLY(just matching the client .dll api for this)
 	// Similar to Con_NPrintf, but allows specifying custom text color and duration information
-	virtual void		Con_NXPrintf( const struct con_nprint_s *info, const char *fmt, ... ) = 0;
+	virtual void		Con_NXPrintf( const struct con_nprint_s *info, PRINTF_FORMAT_STRING const char *fmt, ... ) = 0;
 
 	// Change a specified player's "view entity" (i.e., use the view entity position/orientation for rendering the client view)
 	virtual void		SetView( const edict_t *pClient, const edict_t *pViewent ) = 0;
@@ -415,6 +420,8 @@ public:
 	// Exposed for server plugin authors
 	virtual IServer *GetIServer() = 0;
 
+	// AlliedModders - Below functions require v23 of the interface.
+	
 	virtual bool IsPlayerNameLocked( const edict_t *pEdict ) = 0;
 	virtual bool CanPlayerChangeName( const edict_t *pEdict ) = 0;
 
@@ -448,11 +455,16 @@ public:
 typedef IVEngineServer IVEngineServer021;
 typedef IVEngineServer IVEngineServer022;
 
-
+// AlliedModders - Shim until all supported mods are using the SDK Base that has this
+#if 0
 #define INTERFACEVERSION_SERVERGAMEDLL_VERSION_8	"ServerGameDLL008"
 #define INTERFACEVERSION_SERVERGAMEDLL_VERSION_9	"ServerGameDLL009"
 #define INTERFACEVERSION_SERVERGAMEDLL				"ServerGameDLL010"
 #define INTERFACEVERSION_SERVERGAMEDLL_INT			10
+#else
+#define INTERFACEVERSION_SERVERGAMEDLL				"ServerGameDLL010"
+#define INTERFACEVERSION_SERVERGAMEDLL_INT			10
+#endif
 
 class IServerGCLobby;
 
@@ -583,6 +595,8 @@ public:
 
 	// Called to add output to the status command
 	virtual void 			Status( void (*print) (const char *fmt, ...) ) = 0;
+	
+	// AlliedModders - Below functions require v10 of the interface.
 
 	// Informs the game we would like to load this level, giving it a chance to prepare dynamic resources.
 	//

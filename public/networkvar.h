@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -18,7 +18,7 @@
 	#include "basehandle.h"
 #endif
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #pragma warning( disable : 4284 ) // warning C4284: return type for 'CNetworkVarT<int>::operator ->' is 'int *' (ie; not a UDT or reference to a UDT.  Will produce errors if applied using infix notation)
 #endif
 
@@ -178,12 +178,19 @@ static inline void DispatchNetworkStateChanged( T *pObj, void *pVar )
 	}; \
 	NetworkVar_##name name; 
 
-
+template<typename T>
+FORCEINLINE void NetworkVarConstruct( T &x ) { x = T(0); }
+FORCEINLINE void NetworkVarConstruct( color32_s &x ) { x.r = x.g = x.b = x.a = 0; }
 
 template< class Type, class Changer >
 class CNetworkVarBase
 {
 public:
+	inline CNetworkVarBase()
+	{
+		NetworkVarConstruct( m_Value );
+	}
+
 	template< class C >
 	const Type& operator=( const C &val ) 
 	{ 
@@ -326,7 +333,7 @@ public:
 
 	const Type& operator=( const Type &val ) 
 	{ 
-		return Set( val ); 
+		return this->Set( val ); 
 	}
 
 	const Type& operator=( const CNetworkColor32Base<Type,Changer> &val ) 
@@ -348,7 +355,7 @@ protected:
 	{
 		if ( out != in )
 		{
-			this->NetworkStateChanged();
+			CNetworkVarBase< Type, Changer >::NetworkStateChanged();
 			out = in;
 		}
 	}
@@ -432,7 +439,7 @@ private:
 	{
 		if ( out != in ) 
 		{
-			this->NetworkStateChanged();
+			CNetworkVectorBase<Type,Changer>::NetworkStateChanged();
 			out = in;
 		}
 	}
@@ -449,7 +456,7 @@ public:
 		SetX( ix );
 		SetY( iy );
 		SetZ( iz );
-		SetZ( iw );
+		SetW( iw );
 	}
 	
 	const Type& operator=( const Type &val ) 
@@ -519,7 +526,7 @@ private:
 	{
 		if ( out != in ) 
 		{
-			this->NetworkStateChanged();
+			CNetworkQuaternionBase<Type,Changer>::NetworkStateChanged();
 			out = in;
 		}
 	}
@@ -528,6 +535,8 @@ private:
 
 // Network ehandle wrapper.
 #if defined( CLIENT_DLL ) || defined( GAME_DLL )
+	inline void NetworkVarConstruct( CBaseHandle &x ) {}
+
 	template< class Type, class Changer >
 	class CNetworkHandleBase : public CNetworkVarBase< CBaseHandle, Changer >
 	{
@@ -670,6 +679,7 @@ private:
 	class NetworkVar_##name \
 	{ \
 	public: \
+		NetworkVar_##name() { m_Value[0] = '\0'; } \
 		operator const char*() const { return m_Value; } \
 		const char* Get() const { return m_Value; } \
 		char* GetForModify() \
@@ -699,8 +709,12 @@ private:
 	class NetworkVar_##name \
 	{ \
 	public: \
-		template <typename T> friend int ServerClassInit(T *); \
-		template <typename T> friend datamap_t *DataMapInit(T *); \
+		inline NetworkVar_##name() \
+		{ \
+			for ( int i = 0 ; i < count ; ++i ) \
+				NetworkVarConstruct( m_Value[i] ); \
+		} \
+		template <typename T> friend int ServerClassInit(T *);	\
 		const type& operator[]( int i ) const \
 		{ \
 			return Get( i ); \

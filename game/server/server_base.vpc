@@ -359,6 +359,7 @@ $Project
 		$File	"fogcontroller.cpp"
 		$File	"fourwheelvehiclephysics.cpp"
 		$File	"fourwheelvehiclephysics.h"
+		$File	"functorutils.h"
 		$File	"func_areaportal.cpp"
 		$File	"func_areaportalbase.cpp"
 		$File	"func_areaportalbase.h"
