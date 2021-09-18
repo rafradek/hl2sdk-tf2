@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -144,7 +144,9 @@ enum P4OverflowInterrupt
 };
 
 // Turn off the no return value warning in ReadCounter.
+#ifdef _WIN32
 #pragma warning( disable : 4035 )
+#endif
 class P4BaseEvent
 {
     int m_counter;
@@ -314,7 +316,9 @@ public:
         pme->WriteMSR( cccrPort, cccr.flat );
     }
 };
+#ifdef _WIN32
 #pragma warning( default : 4035 )
+#endif
 
 #include "EventMasks.h" 
 #include "EventModes.h" 

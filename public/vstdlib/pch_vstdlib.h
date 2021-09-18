@@ -1,4 +1,4 @@
-//======== (C) Copyright 1999, 2000 Valve, L.L.C. All rights reserved. ========
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // The copyright to the contents herein is the property of Valve, L.L.C.
 // The contents may be used and/or copied only with the written permission of
@@ -11,8 +11,9 @@
 // $NoKeywords: $
 //=============================================================================
 
-
+#ifdef _WIN32
 #pragma warning(disable: 4514)
+#endif
 
 // First include standard libraries
 #include <stdio.h>
@@ -21,11 +22,6 @@
 #include <malloc.h>
 #include <memory.h>
 #include <ctype.h>
-#ifdef _LINUX
-#include <ctype.h>
-#include <limits.h>
-#define _MAX_PATH PATH_MAX
-#endif
 
 // Next, include public
 #include "tier0/basetypes.h"

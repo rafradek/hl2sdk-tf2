@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2006, Valve LLC, All rights reserved. ============
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Low level byte swapping routines.
 //
@@ -234,7 +234,7 @@ private:
 			Assert( "Invalid size in CByteswap::LowLevelByteSwap" && 0 );
 		}
 #else
-		for( int i = 0; i < (int)sizeof(T); i++ )
+		for( size_t i = 0; i < sizeof(T); i++ )
 		{
 			((unsigned char* )&temp)[i] = ((unsigned char*)input)[sizeof(T)-(i+1)]; 
 		}

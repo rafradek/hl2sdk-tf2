@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -21,19 +21,19 @@
 #include "tier0/memalloc.h"
 #include "tier0/memdbgon.h"
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #pragma warning (disable:4100)
 #pragma warning (disable:4514)
 #endif
 
 //-----------------------------------------------------------------------------
 
-#ifdef UTLMEMORY_TRACK
-#define UTLMEMORY_TRACK_ALLOC()		MemAlloc_RegisterAllocation( "Sum of all UtlBlockMemory", 0, NumAllocated() * sizeof(T), NumAllocated() * sizeof(T), 0 )
-#define UTLMEMORY_TRACK_FREE()		if ( !m_pMemory ) ; else MemAlloc_RegisterDeallocation( "Sum of all UtlBlockMemory", 0, NumAllocated() * sizeof(T), NumAllocated() * sizeof(T), 0 )
+#ifdef UTBLOCKLMEMORY_TRACK
+#define UTLBLOCKMEMORY_TRACK_ALLOC()		MemAlloc_RegisterAllocation( "Sum of all UtlBlockMemory", 0, NumAllocated() * sizeof(T), NumAllocated() * sizeof(T), 0 )
+#define UTLBLOCKMEMORY_TRACK_FREE()		if ( !m_pMemory ) ; else MemAlloc_RegisterDeallocation( "Sum of all UtlBlockMemory", 0, NumAllocated() * sizeof(T), NumAllocated() * sizeof(T), 0 )
 #else
-#define UTLMEMORY_TRACK_ALLOC()		((void)0)
-#define UTLMEMORY_TRACK_FREE()		((void)0)
+#define UTLBLOCKMEMORY_TRACK_ALLOC()		((void)0)
+#define UTLBLOCKMEMORY_TRACK_FREE()		((void)0)
 #endif
 
 
@@ -88,7 +88,7 @@ public:
 	int NumAllocated() const;
 	int Count() const { return NumAllocated(); }
 
-	// Grows memory by MAX(num,growsize) rounded up to the next power of 2, and returns the allocation index/ptr
+	// Grows memory by max(num,growsize) rounded up to the next power of 2, and returns the allocation index/ptr
 	void Grow( int num = 1 );
 
 	// Makes sure we've got at least this much memory
@@ -137,10 +137,10 @@ CUtlBlockMemory<T,I>::~CUtlBlockMemory()
 template< class T, class I >
 void CUtlBlockMemory<T,I>::Swap( CUtlBlockMemory< T, I > &mem )
 {
-	V_swap( m_pMemory, mem.m_pMemory );
-	V_swap( m_nBlocks, mem.m_nBlocks );
-	V_swap( m_nIndexMask, mem.m_nIndexMask );
-	V_swap( m_nIndexShift, mem.m_nIndexShift );
+	swap( m_pMemory, mem.m_pMemory );
+	swap( m_nBlocks, mem.m_nBlocks );
+	swap( m_nIndexMask, mem.m_nIndexMask );
+	swap( m_nIndexShift, mem.m_nIndexShift );
 }
 
 
@@ -242,22 +242,23 @@ void CUtlBlockMemory<T,I>::Grow( int num )
 template< class T, class I >
 void CUtlBlockMemory<T,I>::ChangeSize( int nBlocks )
 {
-	UTLMEMORY_TRACK_FREE(); // this must stay before the recalculation of m_nBlocks, since it implicitly uses the old value
+	UTLBLOCKMEMORY_TRACK_FREE(); // this must stay before the recalculation of m_nBlocks, since it implicitly uses the old value
 
 	int nBlocksOld = m_nBlocks;
 	m_nBlocks = nBlocks;
 
-	UTLMEMORY_TRACK_ALLOC(); // this must stay after the recalculation of m_nBlocks, since it implicitly uses the new value
-
-	// free old blocks if shrinking
-	for ( int i = m_nBlocks; i < nBlocksOld; ++i )
-	{
-		UTLMEMORY_TRACK_FREE();
-		free( (void*)m_pMemory[ i ] );
-	}
+	UTLBLOCKMEMORY_TRACK_ALLOC(); // this must stay after the recalculation of m_nBlocks, since it implicitly uses the new value
 
 	if ( m_pMemory )
 	{
+		// free old blocks if shrinking
+		// Only possible if m_pMemory is non-NULL (and avoids PVS-Studio warning)
+		for ( int i = m_nBlocks; i < nBlocksOld; ++i )
+		{
+			UTLBLOCKMEMORY_TRACK_FREE();
+			free( (void*)m_pMemory[ i ] );
+		}
+
 		MEM_ALLOC_CREDIT_CLASS();
 		m_pMemory = (T**)realloc( m_pMemory, m_nBlocks * sizeof(T*) );
 		Assert( m_pMemory );
@@ -306,12 +307,12 @@ void CUtlBlockMemory<T,I>::Purge()
 
 	for ( int i = 0; i < m_nBlocks; ++i )
 	{
-		UTLMEMORY_TRACK_FREE();
+		UTLBLOCKMEMORY_TRACK_FREE();
 		free( (void*)m_pMemory[ i ] );
 	}
 	m_nBlocks = 0;
 
-	UTLMEMORY_TRACK_FREE();
+	UTLBLOCKMEMORY_TRACK_FREE();
 	free( (void*)m_pMemory );
 	m_pMemory = 0;
 }

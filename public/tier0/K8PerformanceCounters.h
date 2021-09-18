@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -68,7 +68,9 @@ enum UnitEncode
 #	pragma pack(pop)
 
 // Turn off the no return value warning in ReadCounter.
+#ifdef _WIN32
 #pragma warning( disable : 4035 )		
+#endif
 #define k8NUM_COUNTERS 4
 class k8BaseEvent
 {
@@ -235,18 +237,24 @@ public:
         //ReadMSR(counterPort, int64); 
 
         // we need to copy this into a temp for some reason
+#ifdef COMPILER_MSVC64
+	return __readpmc((unsigned long) eventSelectNum);
+#else
         int temp = eventSelectNum;
         _asm 
         {
             mov ecx, temp
             RDPMC 
         }
+#endif
 
-    }
+	}
 
 
 };
+#ifdef _WIN32
 #pragma warning( default : 4035 )
+#endif
 
 
 

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,7 +10,7 @@
 
 void LightDesc_t::RecalculateDerivedValues(void)
 {
-	m_Flags=0;
+	m_Flags = LIGHTTYPE_OPTIMIZATIONFLAGS_DERIVED_VALUES_CALCED;
 	if (m_Attenuation0)
 		m_Flags|=LIGHTTYPE_OPTIMIZATIONFLAGS_HAS_ATTENUATION0;
 	if (m_Attenuation1)
@@ -83,9 +83,6 @@ void LightDesc_t::ComputeLightAtPoints( const FourVectors &pos, const FourVector
 		case MATERIAL_LIGHT_DIRECTIONAL:
 			ComputeLightAtPointsForDirectional( pos, normal, color, DoHalfLambert );
 			return;
-
-		default:
-			return;
 	}
 
 	fltx4 dist2 = delta*delta;
@@ -157,9 +154,8 @@ void LightDesc_t::ComputeLightAtPoints( const FourVectors &pos, const FourVector
 			strength=AndSIMD(OutsideMask,strength);
 		}
 		break;
+			
 
-		default:
-			break;
 	}
 	strength=MulSIMD(strength,falloff);
 	color.x=AddSIMD(color.x,MulSIMD(strength,ReplicateX4(m_Color.x)));
@@ -182,9 +178,6 @@ void LightDesc_t::ComputeNonincidenceLightAtPoints( const FourVectors &pos, Four
 			break;
 				
 		case MATERIAL_LIGHT_DIRECTIONAL:
-			return;
-
-		default:
 			return;
 	}
 
@@ -254,8 +247,7 @@ void LightDesc_t::ComputeNonincidenceLightAtPoints( const FourVectors &pos, Four
 		}
 		break;
 			
-		default:
-			break;
+
 	}
 	strength=MulSIMD(strength,falloff);
 	color.x=AddSIMD(color.x,MulSIMD(strength,ReplicateX4(m_Color.x)));

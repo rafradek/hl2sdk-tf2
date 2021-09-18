@@ -1,0 +1,8 @@
+*.vpc_crc
+*.sdf
+*.vpc.sentinel
+*.VC.db
+*.htm
+.vs/
+Debug/
+Release/
