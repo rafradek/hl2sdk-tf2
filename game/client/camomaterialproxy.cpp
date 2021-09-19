@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -8,15 +8,17 @@
 
 #include "cbase.h"
 // identifier was truncated to '255' characters in the debug information
+#ifdef _WIN32
 #pragma warning(disable: 4786)
+#endif
 
-#include "ProxyEntity.h"
-#include "materialsystem/IMaterialVar.h"
-#include "materialsystem/ITexture.h"
-#include "bitmap/TGALoader.h"
+#include "proxyentity.h"
+#include "materialsystem/imaterialvar.h"
+#include "materialsystem/itexture.h"
+#include "bitmap/tgaloader.h"
 #include "view.h"
 #include "datacache/idatacache.h"
-#include "materialsystem/IMaterial.h"
+#include "materialsystem/imaterial.h"
 #include "vtf/vtf.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -113,8 +115,9 @@ void CCamoTextureRegen::RegenerateTextureBits( ITexture *pTexture, IVTFTexture *
 	m_pProxy->GenerateCamoTexture( pTexture, pVTFTexture );
 }
 
-
+#ifdef _WIN32
 #pragma warning (disable:4355)
+#endif
 
 CCamoMaterialProxy::CCamoMaterialProxy() : m_TextureRegen(this)
 {
@@ -136,7 +139,9 @@ CCamoMaterialProxy::CCamoMaterialProxy() : m_TextureRegen(this)
 	m_pEnt = NULL;
 }
 
+#ifdef _WIN32
 #pragma warning (default:4355)
+#endif
 
 CCamoMaterialProxy::~CCamoMaterialProxy()
 {

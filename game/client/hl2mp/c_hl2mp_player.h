@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -49,7 +49,7 @@ public:
 	virtual void OnDataChanged( DataUpdateType_t type );
 	virtual float GetFOV( void );
 	virtual CStudioHdr *OnNewModel( void );
-	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr );
+	virtual void TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, trace_t *ptr, CDmgAccumulator *pAccumulator );
 	virtual void ItemPreFrame( void );
 	virtual void ItemPostFrame( void );
 	virtual float GetMinFOV()	const { return 5.0f; }
@@ -83,6 +83,8 @@ public:
 	void StartWalking( void );
 	void StopWalking( void );
 	bool IsWalking( void ) { return m_fIsWalking; }
+
+	virtual void PostThink( void );
 
 private:
 	

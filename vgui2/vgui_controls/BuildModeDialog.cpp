@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,7 +7,7 @@
 
 #include <ctype.h>
 #include <stdio.h>
-#include <UtlVector.h>
+#include <utlvector.h>
 
 #include <vgui/IInput.h>
 #include <vgui/ILocalize.h>
@@ -115,7 +115,9 @@ class BuildModeLocalizedStringEditDialog : public Frame
 
 public:
 
+#ifdef _WIN32
 #pragma warning( disable : 4355 )
+#endif
 	BuildModeLocalizedStringEditDialog() : Frame(this, NULL)
 	{
 		m_pTokenEntry = new TextEntry(this, NULL);
@@ -133,7 +135,9 @@ public:
 			m_pFileCombo->AddItem(g_pVGuiLocalize->GetLocalizationFileName(i), NULL);
 		}
 	}
+#ifdef _WIN32
 #pragma warning( default : 4355 )
+#endif
 
 	virtual void DoModal(const char *token)
 	{
@@ -144,7 +148,7 @@ public:
 
 		// lookup the value
 		StringIndex_t val = g_pVGuiLocalize->FindIndex(token);
-		if (val != INVALID_STRING_INDEX)
+		if (val != INVALID_LOCALIZE_STRING_INDEX)
 		{
 			m_pValueEntry->SetText(g_pVGuiLocalize->GetValueByIndex(val));
 
@@ -188,6 +192,43 @@ private:
 	vgui::Button *m_pCancelButton;
 };
 
+class CBuildModeDialogMgr
+{
+public:
+	
+	void Add( BuildModeDialog *pDlg );
+	void Remove( BuildModeDialog *pDlg );
+
+	int Count() const;
+
+private:
+	CUtlVector< BuildModeDialog * > m_vecBuildDialogs;
+};
+
+static CBuildModeDialogMgr g_BuildModeDialogMgr;
+
+void CBuildModeDialogMgr::Add( BuildModeDialog *pDlg )
+{
+	if ( m_vecBuildDialogs.Find( pDlg ) == m_vecBuildDialogs.InvalidIndex() )
+	{
+		m_vecBuildDialogs.AddToTail( pDlg );
+	}
+}
+
+void CBuildModeDialogMgr::Remove( BuildModeDialog *pDlg )
+{
+	m_vecBuildDialogs.FindAndRemove( pDlg );
+}
+
+int CBuildModeDialogMgr::Count() const
+{
+	return m_vecBuildDialogs.Count();
+}
+
+int GetBuildModeDialogCount()
+{
+	return g_BuildModeDialogMgr.Count();
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
@@ -210,6 +251,8 @@ BuildModeDialog::BuildModeDialog(BuildGroup *buildGroup) : Frame(buildGroup->Get
 
 	CreateControls();
 	LoadUserConfig("BuildModeDialog");
+
+	g_BuildModeDialogMgr.Add( this );
 }
 
 //-----------------------------------------------------------------------------
@@ -217,6 +260,8 @@ BuildModeDialog::BuildModeDialog(BuildGroup *buildGroup) : Frame(buildGroup->Get
 //-----------------------------------------------------------------------------
 BuildModeDialog::~BuildModeDialog()
 {
+	g_BuildModeDialogMgr.Remove( this );
+
 	m_pPanelList->m_pResourceData->deleteThis();
 	m_pPanelList->m_pControls->DeleteAllItems();
 	if (_undoSettings)
@@ -553,14 +598,14 @@ const char *ParseTokenFromString( const char **string )
 
 	// find the first alnum character
 	const char *tok = *string;
-	while ( !isalnum(*tok) && *tok != 0 )
+	while ( !V_isalnum(*tok) && *tok != 0 )
 	{
 		tok++;
 	}
 
 	// read in all the alnum characters
 	int pos = 0;
-	while ( isalnum(tok[pos]) )
+	while ( V_isalnum(tok[pos]) )
 	{
 		buf[pos] = tok[pos];
 		pos++;
@@ -932,7 +977,7 @@ void BuildModeDialog::ApplyDataToControls()
 		{
 			char messageString[255];
 			Q_snprintf(messageString, sizeof( messageString ), "Fieldname is not unique: %s\nRename it and try again.", fieldName);
-			MessageBox *errorBox = new MessageBox("Cannot Apply", messageString , false);
+			MessageBox *errorBox = new MessageBox("Cannot Apply", messageString);
 			errorBox->DoModal();
 			UpdateControlData(m_pCurrentPanel);
 			m_pApplyButton->SetEnabled(false);

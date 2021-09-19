@@ -1,4 +1,4 @@
-//===== Copyright Å© 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Draws grasses and other small objects  
 //
@@ -6,22 +6,25 @@
 // $NoKeywords: $
 //===========================================================================//
 #include "cbase.h"
-#include <algorithm>
-#include "DetailObjectSystem.h"
-#include "GameBspFile.h"
-#include "UtlBuffer.h"
+#include "detailobjectsystem.h"
+#include "gamebspfile.h"
+#include "tier1/utlbuffer.h"
 #include "tier1/utlmap.h"
 #include "view.h"
-#include "ClientMode.h"
-#include "IViewRender.h"
-#include "BSPTreeData.h"
+#include "clientmode.h"
+#include "iviewrender.h"
+#include "bsptreedata.h"
 #include "tier0/vprof.h"
 #include "engine/ivmodelinfo.h"
-#include "materialsystem/IMesh.h"
+#include "materialsystem/imesh.h"
 #include "model_types.h"
 #include "env_detail_controller.h"
 #include "tier0/icommandline.h"
 #include "c_world.h"
+
+#include "tier0/valve_minmax_off.h"
+#include <algorithm>
+#include "tier0/valve_minmax_on.h"
 
 #if defined(DOD_DLL) || defined(CSTRIKE_DLL)
 #define USE_DETAIL_SHAPES
@@ -161,6 +164,7 @@ public:
 	virtual bool				GetShadowCastDirection( Vector *pDirection, ShadowType_t shadowType ) const	{ return false; }
 	virtual bool				UsesPowerOfTwoFrameBufferTexture();
 	virtual bool				UsesFullFrameBufferTexture();
+	virtual bool				IgnoresZBuffer( void ) const { return false; }
 	virtual bool				LODTest() { return true; }
 
 	virtual ClientShadowHandle_t	GetShadowHandle() const;
@@ -243,13 +247,17 @@ protected:
 
 	static CUtlMap<CDetailModel *, LightStyleInfo_t> gm_LightStylesMap;
 
+#ifdef _WIN32
 #pragma warning( disable : 4201 ) //warning C4201: nonstandard extension used : nameless struct/union
+#endif
 	union
 	{
 		model_t* m_pModel;
 		SptrintInfo_t m_SpriteInfo;
 	};
+#ifdef _WIN32
 #pragma warning( default : 4201 )
+#endif
 
 #ifdef USE_DETAIL_SHAPES
 	// pointer to advanced properties
@@ -1313,7 +1321,7 @@ void CDetailModel::UpdatePlayerAvoid( void )
 	Vector vecMaxAvoid(0,0,0);
 
 	CPlayerEnumerator avoid( flRadius, m_Origin );
-	partition->EnumerateElementsInSphere( PARTITION_CLIENT_SOLID_EDICTS, m_Origin, flRadius, false, &avoid );
+	::partition->EnumerateElementsInSphere( PARTITION_CLIENT_SOLID_EDICTS, m_Origin, flRadius, false, &avoid );
 
 	// Okay, decide how to avoid if there's anything close by
 	int c = avoid.GetObjectCount();
@@ -1473,7 +1481,7 @@ void CDetailObjectSystem::LevelInitPreEntity()
 		PrecacheMaterial( DETAIL_SPRITE_MATERIAL );
 		IMaterial *pMat = m_DetailSpriteMaterial;
 		// adjust for non-square textures (cropped)
-		float flRatio = pMat->GetMappingWidth() / pMat->GetMappingHeight();
+		float flRatio = (float)( pMat->GetMappingWidth() ) / pMat->GetMappingHeight();
 		if ( flRatio > 1.0 )
 		{
 			for( int i = 0; i<m_DetailSpriteDict.Count(); i++ )
@@ -2113,7 +2121,7 @@ int CDetailObjectSystem::SortSpritesBackToFront( int nLeaf, const Vector &viewOr
 
 
 #define MAGIC_NUMBER (1<<23)
-#ifdef BIG_ENDIAN
+#ifdef VALVE_BIG_ENDIAN
 #define MANTISSA_LSB_OFFSET 3
 #else
 #define MANTISSA_LSB_OFFSET 0
@@ -2121,7 +2129,7 @@ int CDetailObjectSystem::SortSpritesBackToFront( int nLeaf, const Vector &viewOr
 static fltx4 Four_MagicNumbers={ MAGIC_NUMBER, MAGIC_NUMBER, MAGIC_NUMBER, MAGIC_NUMBER };
 static fltx4 Four_255s={ 255.0, 255.0, 255.0, 255.0 };
 
-static __declspec(align(16)) int32 And255Mask[4]= {0xff,0xff,0xff,0xff};
+static ALIGN16 int32 And255Mask[4] ALIGN16_POST = {0xff,0xff,0xff,0xff};
 #define PIXMASK ( * ( reinterpret_cast< fltx4 *>( &And255Mask ) ) )
 
 int CDetailObjectSystem::BuildOutSortedSprites( CFastDetailLeafSpriteList *pData,
@@ -2265,6 +2273,9 @@ void CDetailObjectSystem::RenderFastSprites( const Vector &viewOrigin, const Vec
 		nMaxQuadsToDraw = nMaxVerts / 4;
 	}
 
+	if ( nMaxQuadsToDraw == 0 )
+		return;
+
 	int nQuadsToDraw = MIN( nQuadCount, nMaxQuadsToDraw );
 	int nQuadsRemaining = nQuadsToDraw;
 
@@ -2400,6 +2411,9 @@ void CDetailObjectSystem::RenderTranslucentDetailObjects( const Vector &viewOrig
 		nMaxQuadsToDraw = nMaxVerts / 4;
 	}
 
+	if ( nMaxQuadsToDraw == 0 )
+		return;
+
 	int nQuadsToDraw = nQuadCount;
 	if ( nQuadsToDraw > nMaxQuadsToDraw )
 	{
@@ -2509,6 +2523,9 @@ void CDetailObjectSystem::RenderFastTranslucentDetailObjectsInLeaf( const Vector
 	{
 		nMaxQuadsToDraw = nMaxVerts / 4;
 	}
+	
+	if ( nMaxQuadsToDraw == 0 )
+		return;
 		
 	int nQuadsToDraw = MIN( nCount, nMaxQuadsToDraw );
 	int nQuadsRemaining = nQuadsToDraw;
@@ -2647,6 +2664,10 @@ void CDetailObjectSystem::RenderTranslucentDetailObjectsInLeaf( const Vector &vi
 	{
 		nMaxQuadsToDraw = nMaxVerts / 4;
 	}
+
+	if ( nMaxQuadsToDraw == 0 )
+		return;
+
 	int nQuadsToDraw = nQuadCount;
 	if ( nQuadsToDraw > nMaxQuadsToDraw )
 	{

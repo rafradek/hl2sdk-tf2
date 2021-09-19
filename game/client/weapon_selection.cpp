@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Weapon selection handling
 //
@@ -101,6 +101,7 @@ void CBaseHudWeaponSelection::Reset(void)
 	// Start hidden
 	m_bSelectionVisible = false;
 	m_flSelectionTime = gpGlobals->curtime;
+	gHUD.UnlockRenderGroup( gHUD.LookupRenderGroupIndexByName( "weapon_selection" ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -207,6 +208,7 @@ bool CBaseHudWeaponSelection::IsInSelectionMode()
 void CBaseHudWeaponSelection::OpenSelection( void )
 {
 	m_bSelectionVisible = true;
+	gHUD.LockRenderGroup( gHUD.LookupRenderGroupIndexByName( "weapon_selection" ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -215,6 +217,7 @@ void CBaseHudWeaponSelection::OpenSelection( void )
 void CBaseHudWeaponSelection::HideSelection( void )
 {
 	m_bSelectionVisible = false;
+	gHUD.UnlockRenderGroup( gHUD.LookupRenderGroupIndexByName( "weapon_selection" ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -247,6 +250,12 @@ int	CBaseHudWeaponSelection::KeyInput( int down, ButtonCode_t keynum, const char
 		HideSelection();
 		// returning 0 indicates, we've handled it, no more action needs to be taken
 		return 0;
+	}
+
+	if ( down >= 1 && keynum >= KEY_1 && keynum <= KEY_9 )
+	{
+		if ( HandleHudMenuInput( keynum - KEY_0 ) )
+			return 0;
 	}
 
 	// let someone else handle it
@@ -364,6 +373,20 @@ bool CBaseHudWeaponSelection::IsHudMenuTakingInput()
 }
 
 //-----------------------------------------------------------------------------
+// Purpose: returns true if the CHudMenu handles the slot command
+//-----------------------------------------------------------------------------
+bool CBaseHudWeaponSelection::HandleHudMenuInput( int iSlot )
+{
+	CHudMenu *pHudMenu = GET_HUDELEMENT( CHudMenu );
+	if ( !pHudMenu || !pHudMenu->IsMenuOpen() )
+		return false;
+
+	pHudMenu->SelectMenuItem( iSlot );
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: returns true if the weapon selection hud should be hidden because
 //          the CHudMenu is open
 //-----------------------------------------------------------------------------
@@ -383,10 +406,8 @@ bool CBaseHudWeaponSelection::IsHudMenuPreventingWeaponSelection()
 void CBaseHudWeaponSelection::SelectSlot( int iSlot )
 {
 	// A menu may be overriding weapon selection commands
-	CHudMenu *pHudMenu = GET_HUDELEMENT( CHudMenu );
-	if ( pHudMenu && IsHudMenuTakingInput() )	
-	{ 
-		pHudMenu->SelectMenuItem( iSlot );  // slots are one off the key numbers
+	if ( HandleHudMenuInput( iSlot ) )
+	{
 		return;
 	}
 

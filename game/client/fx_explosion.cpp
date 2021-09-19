@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: Base explosion effect
 //
@@ -6,13 +6,13 @@
 //=============================================================================//
 #include "cbase.h"
 #include "fx_explosion.h"
-#include "ClientEffectPrecacheSystem.h"
-#include "FX_Sparks.h"
+#include "clienteffectprecachesystem.h"
+#include "fx_sparks.h"
 #include "dlight.h"
 #include "tempentity.h"
-#include "IEfx.h"
+#include "iefx.h"
 #include "engine/IEngineSound.h"
-#include "engine/IVDebugOverlay.h"
+#include "engine/ivdebugoverlay.h"
 #include "c_te_effect_dispatch.h"
 #include "fx.h"
 #include "fx_quad.h"
@@ -481,7 +481,7 @@ void C_BaseExplosionEffect::CreateCore( void )
 			
 			pParticle->m_uchStartSize	= random->RandomInt( 8, 16 ) * vDev;
 
-			pParticle->m_uchStartSize	= clamp( pParticle->m_uchStartSize, 4, 32 );
+			pParticle->m_uchStartSize	= clamp( pParticle->m_uchStartSize, (uint8) 4, (uint8) 32 );
 
 			pParticle->m_uchEndSize		= pParticle->m_uchStartSize;
 			
@@ -542,7 +542,7 @@ void C_BaseExplosionEffect::CreateCore( void )
 			
 			pParticle->m_uchStartSize	= random->RandomInt( 32, 85 ) * vDev;
 
-			pParticle->m_uchStartSize	= clamp( pParticle->m_uchStartSize, 32, 85 );
+			pParticle->m_uchStartSize	= clamp( pParticle->m_uchStartSize, (uint8) 32, (uint8) 85 );
 
 			pParticle->m_uchEndSize		= (int)((float)pParticle->m_uchStartSize * 1.5f);
 			
@@ -986,7 +986,7 @@ void C_WaterExplosionEffect::CreateCore( void )
 	
 	float radius = 50.0f;
 
-	unsigned int flags;
+	unsigned int flags = 0;
 
 	// Base vertical shaft
 	FXLineData_t lineData;
@@ -1393,7 +1393,7 @@ void C_MegaBombExplosionEffect::CreateCore( void )
 			
 			pParticle->m_uchStartSize	= random->RandomInt( 32, 85 ) * vDev;
 
-			pParticle->m_uchStartSize	= clamp( pParticle->m_uchStartSize, 32, 85 );
+			pParticle->m_uchStartSize	= clamp( pParticle->m_uchStartSize, (uint8) 32, (uint8) 85 );
 
 			pParticle->m_uchEndSize		= (int)((float)pParticle->m_uchStartSize * 1.5f);
 			

@@ -1,4 +1,4 @@
-//====== Copyright © 1996-2008, Valve Corporation, All rights reserved. =======
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -158,14 +158,15 @@ public:
 	virtual ~CBaseModelPanel();
 
 	// Overridden mdlpanel.h
-	virtual void SetMDL( MDLHandle_t handle );
-	virtual void SetMDL( const char *pMDLName );
+	virtual void SetMDL( MDLHandle_t handle, void *pProxyData = NULL );
+	virtual void SetMDL( const char *pMDLName, void *pProxyData = NULL );
+	virtual void SetModelAnglesAndPosition( const QAngle &angRot, const Vector &vecPos );
 
 	// Overridden methods of vgui::Panel
 	virtual void ApplySettings( KeyValues *inResourceData );
 	virtual void PerformLayout();
 
-	// Animaiton.
+	// Animation.
 	int FindDefaultAnim( void );
 	int FindAnimByName( const char *pszName );
 	void SetModelAnim( int iAnim );
@@ -178,7 +179,23 @@ public:
 	virtual void OnCursorMoved( int x, int y );
 	virtual void OnMouseWheeled( int delta );
 
-private:
+	studiohdr_t* GetStudioHdr( void ) { return m_RootMDL.m_MDL.GetStudioHdr(); }
+	void SetBody( unsigned int nBody ) { m_RootMDL.m_MDL.m_nBody = nBody; }
+
+	void		RotateYaw( float flDelta );
+	void		RotatePitch( float flDelta );
+
+	Vector		GetPlayerPos() const;
+	QAngle		GetPlayerAngles() const;
+
+	void LookAtBounds( const Vector &vecBoundsMin, const Vector &vecBoundsMax );
+
+	// Set to true if external code has set a specific camera position that shouldn't be clobbered by layout
+	void SetForcedCameraPosition( bool bForcedCameraPosition ) { m_bForcedCameraPosition = bForcedCameraPosition; }
+
+	int FindSequenceFromActivity( CStudioHdr *pStudioHdr, const char *pszActivity );
+
+protected:
 
 	// Resource file data.
 	void ParseModelResInfo( KeyValues *inResourceData );
@@ -188,22 +205,42 @@ private:
 	void SetupModelDefaults( void );
 	void SetupModelAnimDefaults( void );
 
-	void LookAtBounds( const Vector &vecBoundsMin, const Vector &vecBoundsMax );
-
-	int FindSequenceFromActivity( CStudioHdr *pStudioHdr, const char *pszActivity );
-
-private:
-
+public:
 	BMPResData_t	m_BMPResData;			// Base model panel data set in the .res file.
 	QAngle			m_angPlayer;
 	Vector			m_vecPlayerPos;
+
+protected:
 	bool			m_bForcePos;
 	bool			m_bMousePressed;
 	bool			m_bAllowRotation;
+	bool			m_bAllowPitch;
+	bool			m_bAllowFullManipulation;
+	bool			m_bApplyManipulators;
+	bool			m_bForcedCameraPosition;
 
 	// VGUI script accessible variables.
 	CPanelAnimationVar( bool, m_bStartFramed, "start_framed", "0" );
 	CPanelAnimationVar( bool, m_bDisableManipulation, "disable_manipulation", "0" );
+	CPanelAnimationVar( bool, m_bUseParticle, "use_particle", "0" );
+	CPanelAnimationVar( float, m_flMaxPitch, "max_pitch", "90" );
+
+	struct particle_data_t
+	{
+		~particle_data_t();
+
+		void UpdateControlPoints( CStudioHdr *pStudioHdr, matrix3x4_t *pWorldMatrix, const CUtlVector< int >& vecAttachments, int iDefaultBone = 0, const Vector& vecParticleOffset = vec3_origin );
+
+		bool				m_bIsUpdateToDate;
+		CParticleCollection	*m_pParticleSystem;
+	};
+	CUtlVector< particle_data_t* > m_particleList;
+
+	particle_data_t *CreateParticleData( const char *pszParticleName );
+	bool SafeDeleteParticleData( particle_data_t **pData );
+
+	virtual void PrePaint3D( IMatRenderContext *pRenderContext ) OVERRIDE;
+	virtual void PostPaint3D( IMatRenderContext *pRenderContext ) OVERRIDE;
 };
 
 #endif // BASEMODEL_PANEL_H

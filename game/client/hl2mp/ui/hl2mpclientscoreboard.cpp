@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -7,7 +7,7 @@
 
 #include "cbase.h"
 #include "hud.h"
-#include "hl2mpClientScoreBoard.h"
+#include "hl2mpclientscoreboard.h"
 #include "c_team.h"
 #include "c_playerresource.h"
 #include "c_hl2mp_player.h"
@@ -18,7 +18,7 @@
 #include <vgui/IScheme.h>
 #include <vgui/ILocalize.h>
 #include <vgui/ISurface.h>
-#include <vgui/IVgui.h>
+#include <vgui/IVGui.h>
 #include <vgui_controls/SectionedListPanel.h>
 
 #include "voice_status.h"
@@ -381,8 +381,12 @@ void CHL2MPClientScoreBoardDialog::UpdateTeamInfo()
 
 			if ( HL2MPRules()->IsTeamplay() == false )
 			{
-				_snwprintf(wNumPlayers, 6, L"%i", iNumPlayersInGame );
-				_snwprintf( name, sizeof(name), L"%s", g_pVGuiLocalize->Find("#ScoreBoard_Deathmatch") );
+				_snwprintf( wNumPlayers, ARRAYSIZE(wNumPlayers), L"%i", iNumPlayersInGame );
+#ifdef WIN32
+				_snwprintf( name, ARRAYSIZE(name), L"%s", g_pVGuiLocalize->Find("#ScoreBoard_Deathmatch") );
+#else
+				_snwprintf( name, ARRAYSIZE(name), L"%S", g_pVGuiLocalize->Find("#ScoreBoard_Deathmatch") );
+#endif
 				
 				teamName = name;
 
@@ -397,7 +401,7 @@ void CHL2MPClientScoreBoardDialog::UpdateTeamInfo()
 			}
 			else
 			{
-				_snwprintf(wNumPlayers, 6, L"%i", team->Get_Number_Players());
+				_snwprintf(wNumPlayers, ARRAYSIZE(wNumPlayers), L"%i", team->Get_Number_Players());
 
 				if (!teamName && team)
 				{
@@ -416,7 +420,7 @@ void CHL2MPClientScoreBoardDialog::UpdateTeamInfo()
 
 				// update stats
 				wchar_t val[6];
-				swprintf(val, L"%d", team->Get_Score());
+				V_snwprintf(val, ARRAYSIZE(val), L"%d", team->Get_Score());
 				m_pPlayerList->ModifyColumn(sectionID, "frags", val);
 				if (team->Get_Ping() < 1)
 				{
@@ -424,7 +428,7 @@ void CHL2MPClientScoreBoardDialog::UpdateTeamInfo()
 				}
 				else
 				{
-					swprintf(val, L"%d", team->Get_Ping());
+					V_snwprintf(val, ARRAYSIZE(val), L"%d", team->Get_Ping());
 					m_pPlayerList->ModifyColumn(sectionID, "ping", val);
 				}
 

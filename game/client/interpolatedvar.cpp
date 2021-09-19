@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -10,8 +10,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#ifdef _WIN32
 // warning C4660: template-class specialization 'CInterpolatedVar<float>' is already instantiated
 #pragma warning( disable : 4660 )
+#endif
 
 template class CInterpolatedVar<float>;
 template class CInterpolatedVar<Vector>;
