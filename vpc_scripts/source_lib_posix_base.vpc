@@ -9,11 +9,11 @@ $Configuration
 	$General
 	{
 		$ConfigurationType                                      "Static Library (.lib)"
-		$GameOutputFile						"$OUTLIBDIR/$OUTLIBNAME$_STATICLIB_EXT"
+		$GameOutputFile						"$OUTLIBDIR/$OUTLIBNAME_i486$_STATICLIB_EXT"
 	}
 
 	$Linker
 	{
-		$OutputFile                                             "$OUTLIBDIR/$OUTLIBNAME$_STATICLIB_EXT"
+		$OutputFile                                             "$OUTLIBDIR/$OUTLIBNAME_i486$_STATICLIB_EXT"
 	}
 }

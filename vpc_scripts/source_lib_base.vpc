@@ -3,6 +3,7 @@ $include "$SRCDIR\vpc_scripts\source_base.vpc"
 
 $MacroRequired OUTLIBDIR	"$SRCDIR\lib\linux" [$LINUXALL]
 $MacroRequired OUTLIBDIR	"$SRCDIR\lib\mac" [$OSXALL]
+$MacroRequired OUTLIBDIR	"$SRCDIR\lib\public$PLATSUBDIR" [$WINDOWS]
 
 $include "$SRCDIR\vpc_scripts\source_lib_posix_base.vpc"	[$POSIX]
 $include "$SRCDIR\vpc_scripts\source_lib_win32_base.vpc"	[$WIN32 || $WIN64]

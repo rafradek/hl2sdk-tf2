@@ -19,12 +19,6 @@ $Configuration
 	{
 		$AdditionalDependencies			"$BASE Rpcrt4.lib"
 	}
-
-	$Linker
-	{
-		$OutputFile						"$OUTLIBDIR/$OUTLIBNAME_i486$_STATICLIB_EXT" [$LINUXALL]
-		$OutputFile						"$OUTLIBDIR/$OUTLIBNAME$_STATICLIB_EXT" [$WINDOWS]
-	}
 }
 
 $Project "tier1"
