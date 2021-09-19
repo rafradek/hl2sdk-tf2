@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -612,8 +612,8 @@ bool CSoundCombiner::AppendSilence( int &currentsample, float duration )
 	while ( --numSamples >= 0 )
 	{
 		currentValue += random->RandomInt( -MOTION_MAXSTEP, MOTION_MAXSTEP );
-		currentValue = MIN( maxValue, currentValue );
-		currentValue = MAX( minValue, currentValue );
+		currentValue = min( maxValue, currentValue );
+		currentValue = max( minValue, currentValue );
 
 		// Downsample to 0 65556 range
 		short s = (float)currentValue / 32768.0f;

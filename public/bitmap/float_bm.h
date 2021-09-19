@@ -1,4 +1,4 @@
-//======= Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -46,10 +46,10 @@ inline PixRGBAF PixRGBA8_to_F( PixRGBA8 const &x )
 inline PixRGBA8 PixRGBAF_to_8( PixRGBAF const &f )
 {
 	PixRGBA8 x;
-	x.Red = MAX( 0, MIN( 255.0,255.0*f.Red ) );
-	x.Green = MAX( 0, MIN( 255.0,255.0*f.Green ) );
-	x.Blue = MAX( 0, MIN( 255.0,255.0*f.Blue ) );
-	x.Alpha = MAX( 0, MIN( 255.0,255.0*f.Alpha ) );
+	x.Red = max( 0, min( 255.0,255.0*f.Red ) );
+	x.Green = max( 0, min( 255.0,255.0*f.Green ) );
+	x.Blue = max( 0, min( 255.0,255.0*f.Blue ) );
+	x.Alpha = max( 0, min( 255.0,255.0*f.Alpha ) );
 	return x;
 }
 
@@ -296,7 +296,7 @@ public:
 			if (face_maps[f].RGBAData)
 			{
 				nfaces++;
-				ret=MAX(ret,face_maps[f].BrightestColor());
+				ret=max(ret,face_maps[f].BrightestColor());
 			}
 			return ret;
 	}
@@ -349,6 +349,7 @@ public:
 	FloatBitMap_t *Level(int lvl) const
 	{
 		Assert(lvl<m_nLevels);
+		Assert(lvl<ARRAYSIZE(m_pLevels));
 		return m_pLevels[lvl];
 	}
 	// rebuild all levels above the specified level

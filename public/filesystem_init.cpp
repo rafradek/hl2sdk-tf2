@@ -610,7 +610,7 @@ FSReturnCode_t FileSystem_LoadSearchPaths( CFSSearchPathsInit &initInfo )
 		}
 		else
 		{
-			FileFindHandle_t findHandle = 0;
+			FileFindHandle_t findHandle = NULL;
 			const char *pszFoundShortName = initInfo.m_pFileSystem->FindFirst( szAbsSearchPath, &findHandle );
 			if ( pszFoundShortName )
 			{

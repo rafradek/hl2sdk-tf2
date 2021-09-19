@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -50,11 +50,11 @@ typedef memhandle_t DataCacheHandle_t;
 //---------------------------------------------------------
 struct DataCacheLimits_t
 {
-	DataCacheLimits_t( unsigned nMaxBytes = (unsigned)-1, unsigned nMaxItems = (unsigned)-1, unsigned nMinBytes = 0, unsigned nMinItems = 0 )
-		: nMaxBytes(nMaxBytes), 
-		nMaxItems(nMaxItems), 
-		nMinBytes(nMinBytes),
-		nMinItems(nMinItems)
+	DataCacheLimits_t( unsigned _nMaxBytes = (unsigned)-1, unsigned _nMaxItems = (unsigned)-1, unsigned _nMinBytes = 0, unsigned _nMinItems = 0 )
+		: nMaxBytes(_nMaxBytes), 
+		nMaxItems(_nMaxItems), 
+		nMinBytes(_nMinBytes),
+		nMinItems(_nMinItems)
 	{
 	}
 
@@ -345,10 +345,9 @@ public:
 		case DC_AGE_DISCARD:
 		case DC_FLUSH_DISCARD:
 		case DC_REMOVED:
+		default:
 			Assert ( 0 );
 			return false;
-		default:
-			break;
 		}
 		return false;
 	}

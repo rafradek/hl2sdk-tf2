@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -72,7 +72,7 @@ public:
 	const char					*m_pNetworkName;
 	SendTable					*m_pTable;
 	ServerClass					*m_pNext;
-	int						m_ClassID;	// Managed by the engine.
+	int							m_ClassID;	// Managed by the engine.
 
 	// This is an index into the network string table (sv.GetInstanceBaselineTable()).
 	int							m_InstanceBaselineIndex; // INVALID_STRING_INDEX if not initialized yet.

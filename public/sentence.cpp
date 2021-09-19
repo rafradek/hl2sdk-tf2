@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -360,7 +360,7 @@ static CCLanguage g_CCLanguageLookup[] =
 	{ CC_FRENCH,	"french",		150,	0,		0 },
 	{ CC_GERMAN,	"german",		0,		150,	0 },
 	{ CC_ITALIAN,	"italian",		0,		150,	150 },
-	{ CC_KOREAN,	"korean",		150,	0,		150 },
+	{ CC_KOREAN,	"koreana",		150,	0,		150 },
 	{ CC_SCHINESE,	"schinese",		150,	0,		150 },
 	{ CC_SPANISH,	"spanish",		0,		0,		150 },
 	{ CC_TCHINESE,	"tchinese",		150,	0,		150 },
@@ -671,6 +671,10 @@ void CSentence::ParseDataVersionOnePointZero( CUtlBuffer& buf )
 		buf.GetString( token );
 		if ( strlen( token ) <= 0 )
 			break;
+		
+		// end of block, return
+		if ( !V_strcmp( token, "}" ) )
+			break;
 
 		char section[ 256 ];
 		Q_strncpy( section, token, sizeof( section ) );
@@ -780,7 +784,7 @@ void CSentence::CacheSaveToBuffer( CUtlBuffer& buf, int version )
 			CEmphasisSample *sample = &m_EmphasisSamples[i];
 			Assert( sample );
 			buf.PutFloat( sample->time );
-			short scaledValue = clamp( (short)( sample->value * 32767 ), 0, 32767 );
+			short scaledValue = clamp( (short)( sample->value * 32767 ), (short)0, (short)32767 );
 			buf.PutShort( scaledValue );
 		}
 		buf.PutChar( GetVoiceDuck() ? 1 : 0 );
@@ -1096,7 +1100,7 @@ void CSentence::ResetToBase( void )
 void CSentence::MarkNewPhraseBase( void )
 {
 #if PHONEME_EDITOR
-	m_nResetWordBase = MAX( m_Words.Size(), 0 );
+	m_nResetWordBase = max( m_Words.Size(), 0 );
 #endif
 }
 
@@ -1491,10 +1495,10 @@ float CSentence::GetIntensity( float time, float endtime )
 	int end = i + 1;
 	int next = i + 2;
 
-	prev = MAX( -1, prev );
-	start = MAX( -1, start );
-	end = MIN( end, GetNumSamples() );
-	next = MIN( next, GetNumSamples() );
+	prev = max( -1, prev );
+	start = max( -1, start );
+	end = min( end, GetNumSamples() );
+	next = min( next, GetNumSamples() );
 
 	CEmphasisSample *esPre = GetBoundedSample( prev, endtime );
 	CEmphasisSample *esStart = GetBoundedSample( start, endtime );
@@ -1678,7 +1682,7 @@ bool CSentence::ShouldSplitWord( char in )
 	if ( in <= 32 )
 		return true;
 
-	if ( in >= 128 )
+	if ( (unsigned char)in > SCHAR_MAX )
 		return true;
 
 	if ( ispunct( in ) )

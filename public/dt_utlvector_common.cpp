@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -9,15 +9,15 @@
 
 #include "tier0/memdbgon.h"
 
-#ifdef _DEBUG
 static CUtlDict<int,int> *g_STDict = 0;
 static CUtlDict<int,int> *g_RTDict = 0;
-#endif
+
 
 char* AllocateStringHelper2( const char *pFormat, va_list marker )
 {
 	char str[512];
 	_vsnprintf( str, sizeof( str ), pFormat, marker );
+	str[ ARRAYSIZE(str) - 1 ] = 0;
 	
 	int len = strlen( str ) + 1;
 	char *pRet = new char[len];

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -78,9 +78,9 @@ void DataTableRecvProxy_LengthProxy( const RecvProp *pProp, void **pOut, void *p
 
 
 RecvProp RecvPropUtlVector(
-	const char *pVarName,	// Use RECVINFO_UTLVECTOR to generate these 4.
-	int offset,				// Used to generate pData in the function specified in varProxy.
-	int sizeofVar,			// The size of each element in the utlvector.
+	const char *pVarName,		// Use RECVINFO_UTLVECTOR to generate these 4.
+	int offset,			// Used to generate pData in the function specified in varProxy.
+	int sizeofVar,		// The size of each element in the utlvector.
 	ResizeUtlVectorFn fn,
 	EnsureCapacityFn ensureFn,
 	int nMaxElements,											// Max # of elements in the array. Keep this as low as possible.

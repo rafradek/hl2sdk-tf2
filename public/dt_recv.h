@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -74,6 +74,9 @@ public:
 	RecvVarProxyFn m_Int32ToInt32;
 	RecvVarProxyFn m_FloatToFloat;
 	RecvVarProxyFn m_VectorToVector;
+#ifdef SUPPORTS_INT64
+	RecvVarProxyFn m_Int64ToInt64;
+#endif
 };
 extern CStandardRecvProxies g_StandardRecvProxies;
 
@@ -134,7 +137,7 @@ public:
 
 public:
 
-	const char				*m_pVarName;
+	const char              *m_pVarName;
 	SendPropType			m_RecvType;
 	int						m_Flags;
 	int						m_StringBufferSize;
@@ -295,11 +298,15 @@ inline bool RecvTable::IsInMainList() const
 
 void RecvProxy_FloatToFloat  ( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_VectorToVector( const CRecvProxyData *pData, void *pStruct, void *pOut );
+void RecvProxy_VectorXYToVectorXY( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_QuaternionToQuaternion( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_Int32ToInt8   ( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_Int32ToInt16  ( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_StringToString( const CRecvProxyData *pData, void *pStruct, void *pOut );
 void RecvProxy_Int32ToInt32  ( const CRecvProxyData *pData, void *pStruct, void *pOut );
+#ifdef SUPPORTS_INT64
+void RecvProxy_Int64ToInt64  ( const CRecvProxyData *pData, void *pStruct, void *pOut );
+#endif
 
 // StaticDataTable does *pOut = pData.
 void DataTableRecvProxy_StaticDataTable(const RecvProp *pProp, void **pOut, void *pData, int objectID);
@@ -322,6 +329,14 @@ RecvProp RecvPropVector(
 	int sizeofVar=SIZEOF_IGNORE,	// Handled by RECVINFO macro, but set to SIZEOF_IGNORE if you don't want to bother.
 	int flags=0, 
 	RecvVarProxyFn varProxy=RecvProxy_VectorToVector
+	);
+
+RecvProp RecvPropVectorXY(
+	const char *pVarName, 
+	int offset, 
+	int sizeofVar=SIZEOF_IGNORE,	// Handled by RECVINFO macro, but set to SIZEOF_IGNORE if you don't want to bother.
+	int flags=0, 
+	RecvVarProxyFn varProxy=RecvProxy_VectorXYToVectorXY
 	);
 
 // This is here so the RecvTable can look more like the SendTable.

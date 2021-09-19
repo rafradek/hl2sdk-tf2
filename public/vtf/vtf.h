@@ -1,4 +1,4 @@
-//===== Copyright © 1996-2005, Valve Corporation, All rights reserved. ======//
+//========= Copyright Valve Corporation, All rights reserved. ============//
 //
 // Purpose: 
 //
@@ -56,9 +56,9 @@ enum CompiledVtfFlags
 	TEXTUREFLAGS_NODEBUGOVERRIDE               = 0x00020000,
 	TEXTUREFLAGS_SINGLECOPY		               = 0x00040000,
 	
-		TEXTUREFLAGS_UNUSED_00080000		   = 0x00080000,
-		TEXTUREFLAGS_UNUSED_00100000		   = 0x00100000,
-		TEXTUREFLAGS_UNUSED_00200000           = 0x00200000,
+	TEXTUREFLAGS_STAGING_MEMORY                = 0x00080000,
+	TEXTUREFLAGS_IMMEDIATE_CLEANUP			   = 0x00100000,
+	TEXTUREFLAGS_IGNORE_PICMIP				   = 0x00200000,
 		TEXTUREFLAGS_UNUSED_00400000           = 0x00400000,
 
 	TEXTUREFLAGS_NODEPTHBUFFER                 = 0x00800000,
@@ -171,6 +171,8 @@ enum LookDir_t
 class IVTFTexture
 {
 public:
+	virtual ~IVTFTexture() {}
+
 	// Initializes the texture and allocates space for the bits
 	// In most cases, you shouldn't force the mip count.
 	virtual bool Init( int nWidth, int nHeight, int nDepth, ImageFormat fmt, int nFlags, int iFrameCount, int nForceMipCount = -1 ) = 0;
@@ -455,7 +457,7 @@ struct VTFFileHeaderV7_1_t : public VTFFileBaseHeader_t
 	unsigned int	flags;
 	unsigned short	numFrames;
 	unsigned short	startFrame;
-#if !defined( _X360 )
+#if !defined( POSIX ) && !defined( _X360 )
 	VectorAligned	reflectivity;
 #else
 	// must manually align in order to maintain pack(1) expected layout with existing binaries
@@ -529,7 +531,7 @@ struct VTFFileHeaderV7_3_t : public VTFFileHeaderV7_2_t
 	char			pad4[3];
 	unsigned int	numResources;
 
-#if defined( _X360 )
+#if defined( _X360 ) || defined( POSIX )
 	// must manually align in order to maintain pack(1) expected layout with existing binaries
 	char			pad5[8];
 #endif
