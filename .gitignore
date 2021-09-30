@@ -3,6 +3,12 @@
 *.vpc.sentinel
 *.VC.db
 *.htm
+
+# Visual Studio
 .vs/
 Debug/
 Release/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user

@@ -379,6 +379,15 @@ void __cdecl operator delete( void *pMem )
 }
 
 #ifdef OSX
+void operator delete( void* pMem, size_t ) throw()
+#else
+void operator delete( void* pMem, size_t )
+#endif
+{
+	g_pMemAlloc->Free( pMem );
+}
+
+#ifdef OSX
 void *__cdecl operator new[]( size_t nSize ) throw (std::bad_alloc)
 #else
 void *__cdecl operator new[]( size_t nSize )
