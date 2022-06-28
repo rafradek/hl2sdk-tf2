@@ -455,16 +455,11 @@ public:
 typedef IVEngineServer IVEngineServer021;
 typedef IVEngineServer IVEngineServer022;
 
-// AlliedModders - Shim until all supported mods are using the SDK Base that has this
-#if 0
 #define INTERFACEVERSION_SERVERGAMEDLL_VERSION_8	"ServerGameDLL008"
 #define INTERFACEVERSION_SERVERGAMEDLL_VERSION_9	"ServerGameDLL009"
-#define INTERFACEVERSION_SERVERGAMEDLL				"ServerGameDLL010"
-#define INTERFACEVERSION_SERVERGAMEDLL_INT			10
-#else
-#define INTERFACEVERSION_SERVERGAMEDLL				"ServerGameDLL010"
-#define INTERFACEVERSION_SERVERGAMEDLL_INT			10
-#endif
+#define INTERFACEVERSION_SERVERGAMEDLL_VERSION_10	"ServerGameDLL010"
+#define INTERFACEVERSION_SERVERGAMEDLL				"ServerGameDLL011"
+#define INTERFACEVERSION_SERVERGAMEDLL_INT			11
 
 class IServerGCLobby;
 
