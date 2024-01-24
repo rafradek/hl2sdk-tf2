@@ -761,6 +761,10 @@ template <class T> FORCEINLINE T AVG(T a, T b)
 // XYZ macro, for printf type functions - ex printf("%f %f %f",XYZ(myvector));
 #define XYZ(v) (v).x,(v).y,(v).z
 
+//
+// Returns a clamped value in the range [min, max].
+//
+#define V_clamp(val, min, max) (((val) > (max)) ? (max) : (((val) < (min)) ? (min) : (val)))
 
 inline float Sign( float x )
 {
@@ -1197,7 +1201,7 @@ inline float SimpleSplineRemapValClamped( float val, float A, float B, float C, 
 	if ( A == B )
 		return val >= B ? D : C;
 	float cVal = (val - A) / (B - A);
-	cVal = clamp( cVal, 0.0f, 1.0f );
+	cVal = V_clamp( cVal, 0.0f, 1.0f );
 	return C + (D - C) * SimpleSpline( cVal );
 }
 
@@ -2168,7 +2172,7 @@ inline bool CloseEnough( const Vector &a, const Vector &b, float epsilon = EQUAL
 // Fast compare
 // maxUlps is the maximum error in terms of Units in the Last Place. This 
 // specifies how big an error we are willing to accept in terms of the value
-// of the least significant digit of the floating point number’s 
+// of the least significant digit of the floating point numberï¿½s 
 // representation. maxUlps can also be interpreted in terms of how many 
 // representable floats we are willing to accept between A and B. 
 // This function will allow maxUlps-1 floats between A and B.
