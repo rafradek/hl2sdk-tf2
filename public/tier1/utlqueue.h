@@ -292,7 +292,7 @@ QueueIter_t CUtlQueue<T, M>::Previous( QueueIter_t it ) const
 template <class T, class M>
 QueueIter_t CUtlQueue<T, M>::Next_Unchecked( QueueIter_t it ) const
 {
-	return it == m_memory.Count() - 1 ? QueueIter_t( 0 ) : QueueIter_t( it + 1 );
+	return it == (intp)m_memory.Count() - 1 ? QueueIter_t( 0 ) : QueueIter_t( it + 1 );
 }
 
 template <class T, class M>

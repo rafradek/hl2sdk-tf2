@@ -40,6 +40,10 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+#if !defined COMPILER_MSVC && !defined HMODULE
+#define HMODULE void *
+#endif
+
 // ------------------------------------------------------------------------------------ //
 // InterfaceReg.
 // ------------------------------------------------------------------------------------ //

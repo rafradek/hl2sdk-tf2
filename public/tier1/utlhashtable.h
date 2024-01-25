@@ -100,7 +100,7 @@ public:
 	void MoveDataFrom( CUtlHashtableEntry &src )
 	{
 		storage_t * RESTRICT srcData = &src.data[0];
-		for ( int i = 0; i < ARRAYSIZE( data ); ++i ) { data[i] = srcData[i]; }
+		for ( unsigned int i = 0; i < ARRAYSIZE( data ); ++i ) { data[i] = srcData[i]; }
 	}
 };
 

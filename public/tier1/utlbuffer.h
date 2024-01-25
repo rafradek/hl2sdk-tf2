@@ -189,6 +189,7 @@ public:
 	unsigned int	GetUnsignedInt( );
 	float			GetFloat( );
 	double			GetDouble( );
+	void*			GetPtr( );
 	template <size_t maxLenInChars> void GetString( char( &pString )[maxLenInChars] )
 	{
 		GetStringInternal( pString, maxLenInChars );
@@ -282,6 +283,7 @@ public:
 	void			PutDouble( double d );
 	void			PutString( const char* pString );
 	void			Put( const void* pMem, int size );
+	void			PutPtr( void * );
 
 	// Used for putting objects that have a byteswap datadesc defined
 	template <typename T> void PutObjects( T *src, int count = 1 );
@@ -766,6 +768,18 @@ inline double CUtlBuffer::GetDouble( )
 	return d;
 }
 
+inline void *CUtlBuffer::GetPtr( )
+{
+	void *p;
+	// LEGACY WARNING: in text mode, PutPtr writes 32 bit pointers in hex, while GetPtr reads 32 or 64 bit pointers in decimal
+#ifndef X64BITS
+	p = ( void* )GetUnsignedInt();
+#else
+	p = ( void* )GetInt64();
+#endif
+	return p;
+}
+
 
 //-----------------------------------------------------------------------------
 // Where am I writing?
@@ -809,6 +823,19 @@ inline int CUtlBuffer::TellMaxPut( ) const
 inline void* CUtlBuffer::PeekPut( int offset )
 {
 	return &m_Memory[m_Put + offset - m_nOffset];
+}
+
+inline void CUtlBuffer::PutPtr( void *p )
+{
+	// LEGACY WARNING: in text mode, PutPtr writes 32 bit pointers in hex, while GetPtr reads 32 or 64 bit pointers in decimal
+	if (!IsText())
+	{
+		PutTypeBin( p );
+	}
+	else
+	{
+		Printf( "0x%p", p );
+	}
 }
 
 

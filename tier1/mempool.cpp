@@ -29,7 +29,7 @@ void CUtlMemoryPool::SetErrorReportFunc( MemoryPoolReportFunc_t func )
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CUtlMemoryPool::CUtlMemoryPool( int blockSize, int numElements, int growMode, const char *pszAllocOwner, int nAlignment )
+CUtlMemoryPool::CUtlMemoryPool( unsigned int blockSize, int numElements, int growMode, const char *pszAllocOwner, int nAlignment )
 {
 #ifdef _X360
 	if( numElements > 0 && growMode != UTLMEMORYPOOL_GROW_NONE )

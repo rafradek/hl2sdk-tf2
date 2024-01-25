@@ -50,7 +50,7 @@ public:
 		GROW_SLOW=UTLMEMORYPOOL_GROW_SLOW
 	};
 
-				CUtlMemoryPool( int blockSize, int numElements, int growMode = UTLMEMORYPOOL_GROW_FAST, const char *pszAllocOwner = NULL, int nAlignment = 0 );
+				CUtlMemoryPool( unsigned int blockSize, int numElements, int growMode = UTLMEMORYPOOL_GROW_FAST, const char *pszAllocOwner = NULL, int nAlignment = 0 );
 				~CUtlMemoryPool();
 
 	void*		Alloc();	// Allocate the element size you specified in the constructor.
@@ -458,7 +458,7 @@ inline void CAlignedMemPool<ITEM_SIZE, ALIGNMENT, CHUNK_SIZE, CAllocator, COMPAC
 template <int ITEM_SIZE, int ALIGNMENT, int CHUNK_SIZE, class CAllocator, int COMPACT_THRESHOLD >
 inline int __cdecl CAlignedMemPool<ITEM_SIZE, ALIGNMENT, CHUNK_SIZE, CAllocator, COMPACT_THRESHOLD>::CompareChunk( void * const *ppLeft, void * const *ppRight )
 {
-	return ((unsigned)*ppLeft) - ((unsigned)*ppRight);
+	return ((uintp)*ppLeft) - ((uintp)*ppRight);
 }
 
 template <int ITEM_SIZE, int ALIGNMENT, int CHUNK_SIZE, class CAllocator, int COMPACT_THRESHOLD >

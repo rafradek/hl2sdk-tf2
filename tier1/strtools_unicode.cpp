@@ -20,7 +20,7 @@ bool Q_IsValidUChar32( uchar32 uVal )
 {
 	// Values > 0x10FFFF are explicitly invalid; ditto for UTF-16 surrogate halves,
 	// values ending in FFFE or FFFF, or values in the 0x00FDD0-0x00FDEF reserved range
-	return ( uVal < 0x110000u ) && ( (uVal - 0x00D800u) > 0x7FFu ) && ( (uVal & 0xFFFFu) < 0xFFFEu ) && ( ( uVal - 0x00FDD0u ) > 0x1Fu );
+	return ( uVal < 0x110000 ) && ( (uVal - 0x00D800u) > 0x7FFu ) && ( (uVal & 0xFFFFu) < 0xFFFEu ) && ( ( uVal - 0x00FDD0u ) > 0x1Fu );
 }
 
 //-----------------------------------------------------------------------------

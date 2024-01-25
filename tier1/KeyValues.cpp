@@ -267,12 +267,12 @@ class CKeyValuesGrowableStringTable
 public: 
 	// Constructor
 	CKeyValuesGrowableStringTable() :
+		m_hashLookup( 2048, 0, 0, m_Functor, m_Functor ),
 		#ifdef PLATFORM_64BITS
 			m_vecStrings( 0, 4 * 512 * 1024 )
 		#else
 			m_vecStrings( 0, 512 * 1024 )
 		#endif
-		, m_hashLookup( 2048, 0, 0, m_Functor, m_Functor )
 	{
 		m_vecStrings.AddToTail( '\0' );
 	}
@@ -1568,14 +1568,14 @@ const wchar_t *KeyValues::GetWString( const char *keyName, const wchar_t *defaul
 bool KeyValues::GetBool( const char *keyName, bool defaultValue, bool* optGotDefault )
 {
 	if ( FindKey( keyName ) )
-    {
-        if ( optGotDefault )
-            (*optGotDefault) = false;
+	{
+		if ( optGotDefault )
+			(*optGotDefault) = false;
 		return 0 != GetInt( keyName, 0 );
-    }
-    
-    if ( optGotDefault )
-        (*optGotDefault) = true;
+	}
+	
+	if ( optGotDefault )
+		(*optGotDefault) = true;
 
 	return defaultValue;
 }
@@ -2528,7 +2528,7 @@ void KeyValues::RecursiveLoadFromBuffer( char const *resourceName, CUtlBuffer &b
 
 			int ival = strtol( value, &pIEnd, 10 );
 			float fval = (float)strtod( value, &pFEnd );
-			bool bOverflow = ( ival == LONG_MAX || ival == LONG_MIN ) && errno == ERANGE;
+			//bool bOverflow = ( ival == LONG_MAX || ival == LONG_MIN ) && errno == ERANGE;
 #ifdef POSIX
 			// strtod supports hex representation in strings under posix but we DON'T
 			// want that support in keyvalues, so undo it here if needed
@@ -2566,7 +2566,7 @@ void KeyValues::RecursiveLoadFromBuffer( char const *resourceName, CUtlBuffer &b
 				dat->m_flValue = fval; 
 				dat->m_iDataType = TYPE_FLOAT;
 			}
-			else if (pIEnd == pSEnd && !bOverflow)
+			else if (pIEnd == pSEnd)// && !bOverflow)
 			{
 				dat->m_iValue = ival; 
 				dat->m_iDataType = TYPE_INT;
@@ -2697,7 +2697,7 @@ bool KeyValues::WriteAsBinary( CUtlBuffer &buffer )
 			}
 		case TYPE_PTR:
 			{
-				buffer.PutUnsignedInt( (int)dat->m_pValue );
+				buffer.PutPtr( dat->m_pValue );
 			}
 
 		default:
@@ -2801,7 +2801,7 @@ bool KeyValues::ReadAsBinary( CUtlBuffer &buffer, int nStackDepth )
 			}
 		case TYPE_PTR:
 			{
-				dat->m_pValue = (void*)buffer.GetUnsignedInt();
+				dat->m_pValue = buffer.GetPtr();
 			}
 
 		default:

@@ -1023,7 +1023,8 @@ class SnappyIOVecWriter {
       assert(curr_iov_written_ <= output_iov_[curr_iov_index_].iov_len);
       if (curr_iov_written_ >= output_iov_[curr_iov_index_].iov_len) {
         // This iovec is full. Go to the next one.
-        if (curr_iov_index_ + 1 >= output_iov_count_) {
+        unsigned long long index = curr_iov_index_ + 1;
+        if (index >= output_iov_count_) {
           return false;
         }
         curr_iov_written_ = 0;
@@ -1105,7 +1106,8 @@ class SnappyIOVecWriter {
                                   len);
         if (to_copy == 0) {
           // This iovec is full. Go to the next one.
-          if (curr_iov_index_ + 1 >= output_iov_count_) {
+          unsigned long long index = curr_iov_index_ + 1;
+          if (index >= output_iov_count_) {
             return false;
           }
           ++curr_iov_index_;
