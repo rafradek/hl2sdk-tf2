@@ -772,7 +772,7 @@ private:
 	public: \
 		static inline void NetworkStateChanged( void *ptr ) \
 		{ \
-			CHECK_USENETWORKVARS ((ThisClass*)(((char*)ptr) - MyOffsetOf(ThisClass,name)))->stateChangedFn( ptr ); \
+			CHECK_USENETWORKVARS ((ThisClass*)(((char*)ptr) - offsetof(ThisClass,name)))->stateChangedFn( ptr ); \
 		} \
 	}; \
 	base< type, NetworkVar_##name > name;

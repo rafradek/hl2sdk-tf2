@@ -24,8 +24,10 @@ typedef unsigned char uint8;
 	#define POSIX 1
 #endif
 
+#if !defined(X64BITS)
 #if defined(__x86_64__) || defined(_WIN64)
 #define X64BITS
+#endif
 #endif
 
 // Make sure VALVE_BIG_ENDIAN gets set on PS3, may already be set previously in Valve internal code.
