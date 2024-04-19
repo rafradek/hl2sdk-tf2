@@ -83,6 +83,8 @@ void LightDesc_t::ComputeLightAtPoints( const FourVectors &pos, const FourVector
 		case MATERIAL_LIGHT_DIRECTIONAL:
 			ComputeLightAtPointsForDirectional( pos, normal, color, DoHalfLambert );
 			return;
+		case MATERIAL_LIGHT_DISABLE:
+			break;
 	}
 
 	fltx4 dist2 = delta*delta;
@@ -154,8 +156,8 @@ void LightDesc_t::ComputeLightAtPoints( const FourVectors &pos, const FourVector
 			strength=AndSIMD(OutsideMask,strength);
 		}
 		break;
-			
-
+		case MATERIAL_LIGHT_DISABLE:
+			break;
 	}
 	strength=MulSIMD(strength,falloff);
 	color.x=AddSIMD(color.x,MulSIMD(strength,ReplicateX4(m_Color.x)));
@@ -179,6 +181,8 @@ void LightDesc_t::ComputeNonincidenceLightAtPoints( const FourVectors &pos, Four
 				
 		case MATERIAL_LIGHT_DIRECTIONAL:
 			return;
+		case MATERIAL_LIGHT_DISABLE:
+			break;
 	}
 
 	fltx4 dist2 = delta*delta;

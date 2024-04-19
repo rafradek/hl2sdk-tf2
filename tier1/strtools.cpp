@@ -2017,7 +2017,7 @@ bool V_ExtractFilePath (const char *path, char *dest, int destSize )
 //-----------------------------------------------------------------------------
 void V_ExtractFileExtension( const char *path, char *dest, int destSize )
 {
-	*dest = NULL;
+	*dest = '\0';
 	const char * extension = V_GetFileExtension( path );
 	if ( NULL != extension )
 		V_strncpy( dest, extension, destSize );
@@ -2874,7 +2874,7 @@ size_t Q_URLDecodeRaw( char *pchDecodeDest, int nDecodeDestLen, const char *pchE
 	return Q_URLDecodeInternal( pchDecodeDest, nDecodeDestLen, pchEncodedSource, nEncodedSourceLen, false );
 }
 
-#if defined( LINUX ) || defined( _PS3 )
+#if defined( _LINUX ) || defined( _PS3 )
 extern "C" void qsort_s( void *base, size_t num, size_t width, int (*compare )(void *, const void *, const void *), void * context );
 #endif
 

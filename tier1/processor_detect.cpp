@@ -6,7 +6,18 @@
 // $NoKeywords: $
 //=============================================================================//
 
-#if defined( _X360 ) || defined( WIN64 )
+#if defined ( _WIN64 )
+
+bool CheckMMXTechnology(void) { return true; }
+bool CheckSSETechnology(void) { return true; }
+bool CheckSSE2Technology(void) { return true; }
+bool Check3DNowTechnology(void) { return true; }
+
+#elif defined _LINUX || defined __APPLE__
+
+#include "processor_detect_linux.cpp"
+
+#elif defined( _X360 )
 
 bool CheckMMXTechnology(void) { return false; }
 bool CheckSSETechnology(void) { return false; }

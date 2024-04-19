@@ -85,7 +85,7 @@ extern "C" DIR *__real_opendir(const char *name);
 
 #define UNICODE_BOGUS_CHAR_VALUE 0xFFFFFFFF
 #define UNICODE_BOGUS_CHAR_CODEPOINT '?'
-
+#ifdef UTF8_PATHMATCH
 inline __attribute__ ((always_inline)) static uint32_t utf8codepoint(const char **_str)
 {
 	const char *str = *_str;
@@ -231,6 +231,7 @@ inline __attribute__ ((always_inline)) static uint32_t utf8codepoint(const char 
 
 	return UNICODE_BOGUS_CHAR_VALUE;
 }
+#endif
 
 typedef struct CaseFoldMapping
 {
@@ -248,6 +249,7 @@ typedef struct CaseFoldHashBucket
 
 #include "pathmatch_casefolding.h"
 
+#ifdef UTF8_PATHMATCH
 inline __attribute__ ((always_inline)) static void locate_case_fold_mapping(const uint32_t from, uint32_t *to)
 {
 	const uint8_t hashed = ((from ^ (from >> 8)) & 0xFF);
@@ -316,7 +318,6 @@ inline __attribute__ ((always_inline)) static int utf8casecmp_loop(const uint32_
 	}
 }
 
-#ifdef UTF8_PATHMATCH
 static int utf8casecmp(const char *str1, const char *str2)
 {
 	uint32_t *folded1 = fold_utf8(str1);

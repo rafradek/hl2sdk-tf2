@@ -18,6 +18,7 @@
 #pragma once
 #endif
 
+#include "tier0/threadtools.h"
 #include "tier0/memalloc.h"
 #include "tier0/tslist.h"
 #include "tier0/platform.h"

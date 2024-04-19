@@ -77,11 +77,11 @@ typedef long int lint64;
 typedef unsigned long int ulint64;
 
 #ifdef X64BITS
-typedef long long intp;
-typedef unsigned long long uintp;
+typedef int64_t intp;
+typedef uint64_t uintp;
 #else
-typedef int intp;
-typedef unsigned int uintp;
+typedef int32_t intp;
+typedef uint32_t uintp;
 #endif
 
 #endif // else _WIN32

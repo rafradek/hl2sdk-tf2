@@ -187,7 +187,9 @@ struct DirWatcherOverlapped : public OVERLAPPED
 
 #if !defined(_PS3) && !defined(_X360)
 // a buffer full of file names
+#ifdef WIN32
 static const int k_cubDirWatchBufferSize = 8 * 1024;
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: directory watching
@@ -455,7 +457,6 @@ void CDirWatcher::AddFileToChangeList( const char *pchFile )
 
 	m_listChangedFiles.AddToTail( pchFile );
 }
-
 
 //-----------------------------------------------------------------------------
 // Purpose: retrieve any changes

@@ -30,6 +30,7 @@ struct cmdalias_t
 //-----------------------------------------------------------------------------
 CCommandBuffer::CCommandBuffer( ) : m_Commands( 32, 32 )
 {
+	m_nLastUsedArgSSize = 0;
 	m_hNextCommand = m_Commands.InvalidIndex();
 	m_nWaitDelayTicks = 1;
 	m_nCurrentTick = 0;

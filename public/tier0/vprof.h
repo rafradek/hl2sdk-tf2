@@ -310,7 +310,7 @@ public:
 	int GetL2CacheMisses();
 
 	// Not used in the common case...
-	void SetCurFrameTime( unsigned long milliseconds );
+	void SetCurFrameTime( uint32_t milliseconds );
 	
 	void SetClientData( int iClientData )	{ m_iClientData = iClientData; }
 	int GetClientData() const				{ return m_iClientData; }
@@ -318,8 +318,10 @@ public:
 #ifdef DBGFLAG_VALIDATE
 	void Validate( CValidator &validator, tchar *pchName );		// Validate our internal structures
 #endif // DBGFLAG_VALIDATE
-
-
+protected:
+#ifdef _WIN32
+	void DumpSingleNode(CVProfNode *, CVProfNode *, int, bool);
+#endif
 // Used by vprof record/playback.
 private:
 
@@ -437,6 +439,11 @@ enum CounterGroup_t
 	COUNTER_GROUP_TELEMETRY,
 }; 
 
+class DBG_CLASS CVProfManager
+{
+
+};
+
 class DBG_CLASS CVProfile 
 {
 public:
@@ -514,6 +521,8 @@ public:
 #endif
 
 #endif
+
+	void RegisterNode(CVProfNode *pNode); 
 
 	void EnterScope( const tchar *pszName, int detailLevel, const tchar *pBudgetGroupName, bool bAssertAccounted );
 	void EnterScope( const tchar *pszName, int detailLevel, const tchar *pBudgetGroupName, bool bAssertAccounted, int budgetFlags );

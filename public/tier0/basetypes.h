@@ -8,6 +8,8 @@
 #ifndef BASETYPES_H
 #define BASETYPES_H
 
+#include <cstdint>
+#include "tier0/platform.h"
 #include "commonmacros.h"
 #include "wchartypes.h"
 
@@ -64,7 +66,16 @@
 template <typename T>
 inline T AlignValue( T val, uintptr_t alignment )
 {
-	return (T)( ( (uintptr_t)val + alignment - 1 ) & ~( alignment - 1 ) );
+	uintptr_t align = alignment;
+	return (T)( ( (uintptr_t)val + align - 1 ) & ~( align - 1 ) );
+}
+
+// Tell MSVC to shut the hell up
+template<>
+inline char* AlignValue( char* val, uintptr_t alignment )
+{
+	uintptr_t align = alignment;
+	return (char *)( ( reinterpret_cast<uintptr_t>(val) + align - 1 ) & ~( align - 1 ) );
 }
 
 
@@ -170,17 +181,17 @@ typedef float vec_t;
 // This assumes the ANSI/IEEE 754-1985 standard
 //-----------------------------------------------------------------------------
 
-inline unsigned long& FloatBits( vec_t& f )
+inline uint32_t& FloatBits( vec_t& f )
 {
-	return *reinterpret_cast<unsigned long*>(&f);
+	return *reinterpret_cast<uint32_t*>(&f);
 }
 
-inline unsigned long const& FloatBits( vec_t const& f )
+inline uint32_t const& FloatBits( vec_t const& f )
 {
-	return *reinterpret_cast<unsigned long const*>(&f);
+	return *reinterpret_cast<uint32_t const*>(&f);
 }
 
-inline vec_t BitsToFloat( unsigned long i )
+inline vec_t BitsToFloat( uint32_t i )
 {
 	return *reinterpret_cast<vec_t*>(&i);
 }
@@ -190,7 +201,7 @@ inline bool IsFinite( vec_t f )
 	return ((FloatBits(f) & 0x7F800000) != 0x7F800000);
 }
 
-inline unsigned long FloatAbsBits( vec_t f )
+inline uint32_t FloatAbsBits( vec_t f )
 {
 	return FloatBits(f) & 0x7FFFFFFF;
 }
@@ -222,7 +233,7 @@ inline float FloatNegate( vec_t f )
 }
 
 
-#define FLOAT32_NAN_BITS     (unsigned long)0x7FC00000	// not a number!
+#define FLOAT32_NAN_BITS     (uint32_t)0x7FC00000	// not a number!
 #define FLOAT32_NAN          BitsToFloat( FLOAT32_NAN_BITS )
 
 #define VEC_T_NAN FLOAT32_NAN
@@ -331,7 +342,7 @@ protected:
 
 
 template< class DummyType >
-class CIntHandle32 : public CBaseIntHandle< unsigned long >
+class CIntHandle32 : public CBaseIntHandle< uint32_t >
 {
 public:
 	inline			CIntHandle32() {}

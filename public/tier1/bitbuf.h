@@ -19,6 +19,7 @@
 #include "mathlib/mathlib.h"
 #include "mathlib/vector.h"
 #include "basetypes.h"
+#include "tier0/platform.h"
 #include "tier0/dbg.h"
 
 
@@ -181,7 +182,7 @@ public:
 	void			WriteOneBitAt( int iBit, int nValue );
 	
 	// Write signed or unsigned. Range is only checked in debug.
-	void			WriteUBitLong( unsigned int data, int numbits, bool bCheckRange=true ) RESTRICT;
+	void			WriteUBitLong( unsigned int data, int numbits, bool bCheckRange=true );
 	void			WriteSBitLong( int data, int numbits );
 	
 	// Tell it whether or not the data is unsigned. If it's signed,
@@ -225,7 +226,7 @@ public:
 	void			WriteByte(int val);
 	void			WriteShort(int val);
 	void			WriteWord(int val);
-	void			WriteLong(long val);
+	void			WriteLong(int32_t val);
 	void			WriteLongLong(int64 val);
 	void			WriteFloat(float val);
 	bool			WriteBytes( const void *pBuf, int nBytes );
@@ -241,7 +242,7 @@ public:
 	int				GetNumBytesWritten() const;
 	int				GetNumBitsWritten() const;
 	int				GetMaxNumBits();
-	int				GetNumBitsLeft() RESTRICT;
+	int				GetNumBitsLeft();
 	int				GetNumBytesLeft();
 	unsigned char*	GetData();
 	const unsigned char*	GetData() const;
@@ -250,12 +251,12 @@ public:
 	bool			CheckForOverflow(int nBits);
 	inline bool		IsOverflowed() const {return m_bOverflow;}
 
-	void			SetOverflowFlag() RESTRICT;
+	void			SetOverflowFlag();
 
 
 public:
 	// The current buffer.
-	unsigned long* RESTRICT m_pData;
+	unsigned int* m_pData;
 	int				m_nDataBytes;
 	int				m_nDataBits;
 	
@@ -292,7 +293,7 @@ inline int bf_write::GetMaxNumBits()
 	return m_nDataBits;
 }
 
-inline int bf_write::GetNumBitsLeft() RESTRICT
+inline int bf_write::GetNumBitsLeft()
 {
 	return m_nDataBits - m_iCurBit;
 }
@@ -323,7 +324,7 @@ BITBUF_INLINE bool bf_write::CheckForOverflow(int nBits)
 	return m_bOverflow;
 }
 
-BITBUF_INLINE void bf_write::SetOverflowFlag() RESTRICT
+BITBUF_INLINE void bf_write::SetOverflowFlag()
 {
 #ifdef DBGFLAG_ASSERT
 	if ( m_bAssertOnOverflow )
@@ -342,7 +343,7 @@ BITBUF_INLINE void bf_write::WriteOneBitNoCheck(int nValue)
 	else
 		m_pData[m_iCurBit >> 5] &= ~(1u << (m_iCurBit & 31));
 #else
-	extern unsigned long g_LittleBits[32];
+	extern unsigned int g_LittleBits[32];
 	if(nValue)
 		m_pData[m_iCurBit >> 5] |= g_LittleBits[m_iCurBit & 31];
 	else
@@ -379,7 +380,7 @@ inline void	bf_write::WriteOneBitAt( int iBit, int nValue )
 	else
 		m_pData[iBit >> 5] &= ~(1u << (iBit & 31));
 #else
-	extern unsigned long g_LittleBits[32];
+	extern unsigned int g_LittleBits[32];
 	if(nValue)
 		m_pData[iBit >> 5] |= g_LittleBits[iBit & 31];
 	else
@@ -387,13 +388,13 @@ inline void	bf_write::WriteOneBitAt( int iBit, int nValue )
 #endif
 }
 
-BITBUF_INLINE void bf_write::WriteUBitLong( unsigned int curData, int numbits, bool bCheckRange ) RESTRICT
+BITBUF_INLINE void bf_write::WriteUBitLong( unsigned int curData, int numbits, bool bCheckRange )
 {
 #ifdef _DEBUG
 	// Make sure it doesn't overflow.
 	if ( bCheckRange && numbits < 32 )
 	{
-		if ( curData >= (unsigned long)(1 << numbits) )
+		if ( curData >= (uint32_t)(1 << numbits) )
 		{
 			CallErrorHandler( BITBUFERROR_VALUE_OUT_OF_RANGE, GetDebugName() );
 		}
@@ -415,7 +416,7 @@ BITBUF_INLINE void bf_write::WriteUBitLong( unsigned int curData, int numbits, b
 
 	// Mask in a dword.
 	Assert( (iDWord*4 + sizeof(long)) <= (unsigned int)m_nDataBytes );
-	unsigned long * RESTRICT pOut = &m_pData[iDWord];
+	unsigned int * pOut = &m_pData[iDWord];
 
 	// Rotate data into dword alignment
 	curData = (curData << iCurBitMasked) | (curData >> (32 - iCurBitMasked));
@@ -427,8 +428,8 @@ BITBUF_INLINE void bf_write::WriteUBitLong( unsigned int curData, int numbits, b
 	
 	// Only look beyond current word if necessary (avoid access violation)
 	int i = mask2 & 1;
-	unsigned long dword1 = LoadLittleDWord( pOut, 0 );
-	unsigned long dword2 = LoadLittleDWord( pOut, i );
+	unsigned int dword1 = LoadLittleDWord( pOut, 0 );
+	unsigned int dword2 = LoadLittleDWord( pOut, i );
 	
 	// Drop bits into place
 	dword1 ^= ( mask1 & ( curData ^ dword1 ) );
@@ -565,8 +566,8 @@ public:
 	
 	float			ReadBitAngle( int numbits );
 
-	unsigned int	ReadUBitLong( int numbits ) RESTRICT;
-	unsigned int	ReadUBitLongNoInline( int numbits ) RESTRICT;
+	unsigned int	ReadUBitLong( int numbits );
+	unsigned int	ReadUBitLongNoInline( int numbits );
 	unsigned int	PeekUBitLong( int numbits );
 	int				ReadSBitLong( int numbits );
 
@@ -603,7 +604,7 @@ public:
 	BITBUF_INLINE int	ReadByte() { return ReadUBitLong(8); }
 	BITBUF_INLINE int	ReadShort() { return (short)ReadUBitLong(16); }
 	BITBUF_INLINE int	ReadWord() { return ReadUBitLong(16); }
-	BITBUF_INLINE long ReadLong() { return ReadUBitLong(32); }
+	BITBUF_INLINE int ReadLong() { return ReadUBitLong(32); }
 	int64			ReadLongLong();
 	float			ReadFloat();
 	bool			ReadBytes(void *pOut, int nBytes);
@@ -628,14 +629,14 @@ public:
 	char*			ReadAndAllocateString( bool *pOverflow = 0 );
 
 	// Returns nonzero if any bits differ
-	int				CompareBits( bf_read * RESTRICT other, int bits ) RESTRICT;
-	int				CompareBitsAt( int offset, bf_read * RESTRICT other, int otherOffset, int bits ) RESTRICT;
+	int				CompareBits( bf_read * other, int bits );
+	int				CompareBitsAt( int offset, bf_read * other, int otherOffset, int bits );
 
 // Status.
 public:
 	int				GetNumBytesLeft();
 	int				GetNumBytesRead();
-	int				GetNumBitsLeft() RESTRICT;
+	int				GetNumBitsLeft();
 	int				GetNumBitsRead() const;
 
 	// Has the buffer overflowed?
@@ -645,13 +646,13 @@ public:
 	inline bool		SeekRelative(int iBitDelta);	// Seek to an offset from the current position.
 
 	// Called when the buffer is overflowed.
-	void			SetOverflowFlag() RESTRICT;
+	void			SetOverflowFlag();
 
 
 public:
 
 	// The current buffer.
-	const unsigned char* RESTRICT m_pData;
+	const unsigned char* m_pData;
 	int						m_nDataBytes;
 	int						m_nDataBits;
 	
@@ -678,7 +679,7 @@ inline int bf_read::GetNumBytesRead()
 	return BitByte(m_iCurBit);
 }
 
-inline int bf_read::GetNumBitsLeft() RESTRICT
+inline int bf_read::GetNumBitsLeft()
 {
 	return m_nDataBits - m_iCurBit;
 }
@@ -728,7 +729,7 @@ inline bool bf_read::CheckForOverflow(int nBits)
 inline int bf_read::ReadOneBitNoCheck()
 {
 #if VALVE_LITTLE_ENDIAN
-	unsigned int value = ((unsigned long * RESTRICT)m_pData)[m_iCurBit >> 5] >> (m_iCurBit & 31);
+	unsigned int value = ((unsigned int *)m_pData)[m_iCurBit >> 5] >> (m_iCurBit & 31);
 #else
 	unsigned char value = m_pData[m_iCurBit >> 3] >> (m_iCurBit & 7);
 #endif
@@ -766,7 +767,7 @@ BITBUF_INLINE unsigned int bf_read::ReadUBitVar()
 	return sixbits >> 2;
 }
 
-BITBUF_INLINE unsigned int bf_read::ReadUBitLong( int numbits ) RESTRICT
+BITBUF_INLINE unsigned int bf_read::ReadUBitLong( int numbits )
 {
 	Assert( numbits > 0 && numbits <= 32 );
 
@@ -787,17 +788,17 @@ BITBUF_INLINE unsigned int bf_read::ReadUBitLong( int numbits ) RESTRICT
 #if __i386__
 	unsigned int bitmask = (2 << (numbits-1)) - 1;
 #else
-	extern unsigned long g_ExtraMasks[33];
+	extern uint32_t g_ExtraMasks[33];
 	unsigned int bitmask = g_ExtraMasks[numbits];
 #endif
 
-	unsigned int dw1 = LoadLittleDWord( (unsigned long* RESTRICT)m_pData, iWordOffset1 ) >> iStartBit;
-	unsigned int dw2 = LoadLittleDWord( (unsigned long* RESTRICT)m_pData, iWordOffset2 ) << (32 - iStartBit);
+	unsigned int dw1 = LoadLittleDWord( (unsigned int*)m_pData, iWordOffset1 ) >> iStartBit;
+	unsigned int dw2 = LoadLittleDWord( (unsigned int*)m_pData, iWordOffset2 ) << (32 - iStartBit);
 
 	return (dw1 | dw2) & bitmask;
 }
 
-BITBUF_INLINE int bf_read::CompareBits( bf_read * RESTRICT other, int numbits ) RESTRICT
+BITBUF_INLINE int bf_read::CompareBits( bf_read * other, int numbits )
 {
 	return (ReadUBitLong(numbits) != other->ReadUBitLong(numbits));
 }

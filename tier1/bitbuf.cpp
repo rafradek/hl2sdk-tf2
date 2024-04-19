@@ -83,14 +83,14 @@ void SetBitBufErrorHandler( BitBufErrorHandler fn )
 
 // #define BB_PROFILING
 
-unsigned long g_LittleBits[32];
+unsigned int g_LittleBits[32];
 
 // Precalculated bit masks for WriteUBitLong. Using these tables instead of 
 // doing the calculations gives a 33% speedup in WriteUBitLong.
-unsigned long g_BitWriteMasks[32][33];
+uint32_t g_BitWriteMasks[32][33];
 
 // (1 << i) - 1
-unsigned long g_ExtraMasks[33];
+uint32_t g_ExtraMasks[33];
 
 class CBitWriteMasksInit
 {
@@ -110,7 +110,7 @@ public:
 
 		for ( unsigned int maskBit=0; maskBit < 32; maskBit++ )
 			g_ExtraMasks[maskBit] = BitForBitnum(maskBit) - 1;
-		g_ExtraMasks[32] = ~0ul;
+		g_ExtraMasks[32] = ~0u;
 
 		for ( unsigned int littleBit=0; littleBit < 32; littleBit++ )
 			StoreLittleDWord( &g_LittleBits[littleBit], 0, 1u<<littleBit );
@@ -152,12 +152,12 @@ void bf_write::StartWriting( void *pData, int nBytes, int iStartBit, int nBits )
 {
 	// Make sure it's dword aligned and padded.
 	Assert( (nBytes % 4) == 0 );
-	Assert(((unsigned long)pData & 3) == 0);
+	Assert(((uint32_t)pData & 3) == 0);
 
 	// The writing code will overrun the end of the buffer if it isn't dword aligned, so truncate to force alignment
 	nBytes &= ~3;
 
-	m_pData = (unsigned long*)pData;
+	m_pData = (unsigned int*)pData;
 	m_nDataBytes = nBytes;
 
 	if ( nBits == -1 )
@@ -462,7 +462,7 @@ bool bf_write::WriteBits(const void *pInData, int nBits)
 	}
 
 	// Align output to dword boundary
-	while (((unsigned long)pOut & 3) != 0 && nBitsLeft >= 8)
+	while (((uintptr_t)pOut & 3) != 0 && nBitsLeft >= 8)
 	{
 
 		WriteUBitLong( *pOut, 8, false );
@@ -485,18 +485,18 @@ bool bf_write::WriteBits(const void *pInData, int nBits)
 	// X360TBD: Can't write dwords in WriteBits because they'll get swapped
 	if ( IsPC() && nBitsLeft >= 32 )
 	{
-		unsigned long iBitsRight = (m_iCurBit & 31);
-		unsigned long iBitsLeft = 32 - iBitsRight;
-		unsigned long bitMaskLeft = g_BitWriteMasks[iBitsRight][32];
-		unsigned long bitMaskRight = g_BitWriteMasks[0][iBitsRight];
+		uint32_t iBitsRight = (m_iCurBit & 31);
+		uint32_t iBitsLeft = 32 - iBitsRight;
+		uint32_t bitMaskLeft = g_BitWriteMasks[iBitsRight][32];
+		uint32_t bitMaskRight = g_BitWriteMasks[0][iBitsRight];
 
-		unsigned long *pData = &m_pData[m_iCurBit>>5];
+		uint32_t *pData = &((uint32_t*)m_pData)[m_iCurBit>>5];
 
 		// Read dwords.
 		while(nBitsLeft >= 32)
 		{
-			unsigned long curData = *(unsigned long*)pOut;
-			pOut += sizeof(unsigned long);
+			uint32_t curData = *(uint32_t*)pOut;
+			pOut += sizeof(uint32_t);
 
 			*pData &= bitMaskLeft;
 			*pData |= curData << iBitsRight;
@@ -736,9 +736,9 @@ void bf_write::WriteWord(int val)
 	WriteUBitLong(val, sizeof(unsigned short) << 3);
 }
 
-void bf_write::WriteLong(long val)
+void bf_write::WriteLong(int32_t val)
 {
-	WriteSBitLong(val, sizeof(long) << 3);
+	WriteSBitLong(val, sizeof(int32_t) << 3);
 }
 
 void bf_write::WriteLongLong(int64 val)
@@ -748,8 +748,8 @@ void bf_write::WriteLongLong(int64 val)
 	// Insert the two DWORDS according to network endian
 	const short endianIndex = 0x0100;
 	byte *idx = (byte*)&endianIndex;
-	WriteUBitLong(pLongs[*idx++], sizeof(long) << 3);
-	WriteUBitLong(pLongs[*idx], sizeof(long) << 3);
+	WriteUBitLong(pLongs[*idx++], sizeof(int32_t) << 3);
+	WriteUBitLong(pLongs[*idx], sizeof(int32_t) << 3);
 }
 
 void bf_write::WriteFloat(float val)
@@ -814,7 +814,7 @@ bf_read::bf_read( const char *pDebugName, const void *pData, int nBytes, int nBi
 void bf_read::StartReading( const void *pData, int nBytes, int iStartBit, int nBits )
 {
 	// Make sure we're dword aligned.
-	Assert(((size_t)pData & 3) == 0);
+	Assert(((uint32_t)pData & 3) == 0);
 
 	m_pData = (unsigned char*)pData;
 	m_nDataBytes = nBytes;
@@ -849,7 +849,7 @@ void bf_read::SetDebugName( const char *pName )
 	m_pDebugName = pName;
 }
 
-void bf_read::SetOverflowFlag() RESTRICT
+void bf_read::SetOverflowFlag()
 {
 	if ( m_bAssertOnOverflow )
 	{
@@ -885,7 +885,7 @@ void bf_read::ReadBits(void *pOutData, int nBits)
 
 	
 	// align output to dword boundary
-	while( ((size_t)pOut & 3) != 0 && nBitsLeft >= 8 )
+	while( ((uintptr_t)pOut & 3) != 0 && nBitsLeft >= 8 )
 	{
 		*pOut = (unsigned char)ReadUBitLong(8);
 		++pOut;
@@ -898,8 +898,8 @@ void bf_read::ReadBits(void *pOutData, int nBits)
 		// read dwords
 		while ( nBitsLeft >= 32 )
 		{
-			*((unsigned long*)pOut) = ReadUBitLong(32);
-			pOut += sizeof(unsigned long);
+			*((uint32_t*)pOut) = ReadUBitLong(32);
+			pOut += sizeof(uint32_t);
 			nBitsLeft -= 32;
 		}
 	}
@@ -1018,7 +1018,7 @@ int bf_read::ReadSBitLong( int numbits )
 	return r;
 }
 
-uint32 bf_read::ReadVarInt32()
+uint32_t bf_read::ReadVarInt32()
 {
 	uint32 result = 0;
 	int count = 0;
@@ -1349,8 +1349,8 @@ int64 bf_read::ReadLongLong()
 	// Read the two DWORDs according to network endian
 	const short endianIndex = 0x0100;
 	byte *idx = (byte*)&endianIndex;
-	pLongs[*idx++] = ReadUBitLong(sizeof(long) << 3);
-	pLongs[*idx] = ReadUBitLong(sizeof(long) << 3);
+	pLongs[*idx++] = ReadUBitLong(sizeof(uint32_t) << 3);
+	pLongs[*idx] = ReadUBitLong(sizeof(uint32_t) << 3);
 
 	return retval;
 }
@@ -1446,9 +1446,9 @@ void bf_read::ExciseBits( int startbit, int bitstoremove )
 	m_nDataBytes = m_nDataBits >> 3;
 }
 
-int bf_read::CompareBitsAt( int offset, bf_read * RESTRICT other, int otherOffset, int numbits ) RESTRICT
+int bf_read::CompareBitsAt( int offset, bf_read * other, int otherOffset, int numbits )
 {
-	extern unsigned long g_ExtraMasks[33];
+	extern unsigned int g_ExtraMasks[33];
 
 	if ( numbits == 0 )
 		return 0;
@@ -1462,17 +1462,17 @@ int bf_read::CompareBitsAt( int offset, bf_read * RESTRICT other, int otherOffse
 
 	unsigned int iStartBit1 = offset & 31u;
 	unsigned int iStartBit2 = otherOffset & 31u;
-	unsigned long *pData1 = (unsigned long*)m_pData + (offset >> 5);
-	unsigned long *pData2 = (unsigned long*)other->m_pData + (otherOffset >> 5);
-	unsigned long *pData1End = pData1 + ((offset + numbits - 1) >> 5);
-	unsigned long *pData2End = pData2 + ((otherOffset + numbits - 1) >> 5);
+	unsigned int *pData1 = (unsigned int*)m_pData + (offset >> 5);
+	unsigned int *pData2 = (unsigned int*)other->m_pData + (otherOffset >> 5);
+	unsigned int *pData1End = pData1 + ((offset + numbits - 1) >> 5);
+	unsigned int *pData2End = pData2 + ((otherOffset + numbits - 1) >> 5);
 
 	while ( numbits > 32 )
 	{
-		x  = LoadLittleDWord( (unsigned long*)pData1, 0 ) >> iStartBit1;
-		x ^= LoadLittleDWord( (unsigned long*)pData1, 1 ) << (32 - iStartBit1);
-		x ^= LoadLittleDWord( (unsigned long*)pData2, 0 ) >> iStartBit2;
-		x ^= LoadLittleDWord( (unsigned long*)pData2, 1 ) << (32 - iStartBit2);
+		x  = LoadLittleDWord( (unsigned int*)pData1, 0 ) >> iStartBit1;
+		x ^= LoadLittleDWord( (unsigned int*)pData1, 1 ) << (32 - iStartBit1);
+		x ^= LoadLittleDWord( (unsigned int*)pData2, 0 ) >> iStartBit2;
+		x ^= LoadLittleDWord( (unsigned int*)pData2, 1 ) << (32 - iStartBit2);
 		if ( x != 0 )
 		{
 			return x; 
@@ -1482,9 +1482,9 @@ int bf_read::CompareBitsAt( int offset, bf_read * RESTRICT other, int otherOffse
 		numbits -= 32;
 	}
 
-	x  = LoadLittleDWord( (unsigned long*)pData1, 0 ) >> iStartBit1;
-	x ^= LoadLittleDWord( (unsigned long*)pData1End, 0 ) << (32 - iStartBit1);
-	x ^= LoadLittleDWord( (unsigned long*)pData2, 0 ) >> iStartBit2;
-	x ^= LoadLittleDWord( (unsigned long*)pData2End, 0 ) << (32 - iStartBit2);
+	x  = LoadLittleDWord( (unsigned int*)pData1, 0 ) >> iStartBit1;
+	x ^= LoadLittleDWord( (unsigned int*)pData1End, 0 ) << (32 - iStartBit1);
+	x ^= LoadLittleDWord( (unsigned int*)pData2, 0 ) >> iStartBit2;
+	x ^= LoadLittleDWord( (unsigned int*)pData2End, 0 ) << (32 - iStartBit2);
 	return x & g_ExtraMasks[ numbits ];
 }

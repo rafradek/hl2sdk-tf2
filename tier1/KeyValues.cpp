@@ -974,8 +974,8 @@ void KeyValues::SaveKeyToFile( KeyValues *dat, IBaseFileSystem *filesystem, File
 
 				char buf[32];
 				// write "0x" + 16 char 0-padded hex encoded 64 bit value
-#ifdef WIN32
-				Q_snprintf( buf, sizeof( buf ), "0x%016I64X", *( (uint64 *)dat->m_sValue ) );
+#ifdef PLATFORM_64BITS
+				Q_snprintf( buf, sizeof( buf ), "0x%016lX", *( (uint64 *)dat->m_sValue ) );
 #else
 				Q_snprintf( buf, sizeof( buf ), "0x%016llX", *( (uint64 *)dat->m_sValue ) );
 #endif
@@ -1467,7 +1467,11 @@ const char *KeyValues::GetString( const char *keyName, const char *defaultValue 
 			SetString( keyName, buf );
 			break;
 		case TYPE_PTR:
+#ifdef PLATFORM_64BITS
+			Q_snprintf( buf, sizeof( buf ), "%ld", (int64)(size_t)dat->m_pValue );
+#else
 			Q_snprintf( buf, sizeof( buf ), "%lld", (int64)(size_t)dat->m_pValue );
+#endif
 			SetString( keyName, buf );
 			break;
 		case TYPE_INT:
@@ -1475,7 +1479,11 @@ const char *KeyValues::GetString( const char *keyName, const char *defaultValue 
 			SetString( keyName, buf );
 			break;
 		case TYPE_UINT64:
-			Q_snprintf( buf, sizeof( buf ), "%lld", *((uint64 *)(dat->m_sValue)) );
+#ifdef PLATFORM_64BITS
+			Q_snprintf( buf, sizeof( buf ), "%lu", *((uint64 *)(dat->m_sValue)) );
+#else
+			Q_snprintf( buf, sizeof( buf ), "%llu", *((uint64 *)(dat->m_sValue)) );
+#endif
 			SetString( keyName, buf );
 			break;
 
@@ -3039,14 +3047,16 @@ bool KeyValues::Dump( IKeyValuesDumpContext *pDump, int nIndentLevel /* = 0 */ )
 		return false;
 	
 	// Dump values
-	for ( KeyValues *val = this ? GetFirstValue() : NULL; val; val = val->GetNextValue() )
+	KeyValues *val = this;
+	for ( val = val ? GetFirstValue() : val; val; val = val->GetNextValue() )
 	{
 		if ( !pDump->KvWriteValue( val, nIndentLevel + 1 ) )
 			return false;
 	}
 
 	// Dump subkeys
-	for ( KeyValues *sub = this ? GetFirstTrueSubKey() : NULL; sub; sub = sub->GetNextTrueSubKey() )
+	KeyValues *sub = this;
+	for ( sub = sub ? GetFirstTrueSubKey() : sub; sub; sub = sub->GetNextTrueSubKey() )
 	{
 		if ( !sub->Dump( pDump, nIndentLevel + 1 ) )
 			return false;
@@ -3145,7 +3155,11 @@ bool IKeyValuesDumpContextAsText::KvWriteValue( KeyValues *val, int nIndentLevel
 		{
 			uint64 n = val->GetUint64();
 			char *chBuffer = ( char * ) stackalloc( 128 );
-			V_snprintf( chBuffer, 128, "u64( %lld = 0x%llX )", n, n );
+#ifdef PLATFORM_64BITS
+			V_snprintf( chBuffer, 128, "u64( %lu = 0x%lX )", n, n );
+#else
+			V_snprintf( chBuffer, 128, "u64( %llu = 0x%llX )", n, n );
+#endif
 			if ( !KvWriteText( chBuffer ) )
 				return false;
 		}

@@ -20,6 +20,7 @@
 #ifdef __clang__
 #define COMPILER_CLANG 1
 #endif
+#include <cstdint>
 
 #if defined( _X360 )
 	#define NO_STEAM
@@ -163,23 +164,13 @@
 typedef unsigned char uint8;
 typedef signed char int8;
 
+#if defined( __x86_64__ ) || defined( _WIN64 )
+#ifndef X64BITS
+#define X64BITS
+#endif
+#endif
+
 #if defined( _WIN32 )
-
-	typedef __int16					int16;
-	typedef unsigned __int16		uint16;
-	typedef __int32					int32;
-	typedef unsigned __int32		uint32;
-	typedef __int64					int64;
-	typedef unsigned __int64		uint64;
-
-	#ifdef PLATFORM_64BITS
-		typedef __int64 intp;				// intp is an integer that can accomodate a pointer
-		typedef unsigned __int64 uintp;		// (ie, sizeof(intp) >= sizeof(int) && sizeof(intp) >= sizeof(void *)
-	#else
-		typedef __int32 intp;
-		typedef unsigned __int32 uintp;
-	#endif
-
 	#if defined( _X360 )
 		#ifdef __m128
 			#undef __m128
@@ -195,20 +186,6 @@ typedef signed char int8;
 	#define OVERRIDE override
 
 #else // _WIN32
-
-	typedef short					int16;
-	typedef unsigned short			uint16;
-	typedef int						int32;
-	typedef unsigned int			uint32;
-	typedef long long				int64;
-	typedef unsigned long long		uint64;
-	#ifdef PLATFORM_64BITS
-		typedef long long			intp;
-		typedef unsigned long long	uintp;
-	#else
-		typedef int					intp;
-		typedef unsigned int		uintp;
-	#endif
 	typedef void *HWND;
 
 	// Avoid redefinition warnings if a previous header defines this.
@@ -225,6 +202,21 @@ typedef signed char int8;
 	#endif
 
 #endif // else _WIN32
+
+typedef int16_t		int16;
+typedef uint16_t	uint16;
+typedef int32_t		int32;
+typedef uint32_t	uint32;
+typedef int64_t		int64;
+typedef uint64_t	uint64;
+typedef intptr_t	intp;
+typedef uintptr_t	uintp;
+
+#ifdef PLATFORM_64BITS
+typedef uint64_t ThreadId_t;
+#else
+typedef uint32_t ThreadId_t;
+#endif
 
 //-----------------------------------------------------------------------------
 // Set up platform type defines.
@@ -782,6 +774,7 @@ static FORCEINLINE double fsel(double fComparand, double fValGE, double fLT)
 //-----------------------------------------------------------------------------
 //#define CHECK_FLOAT_EXCEPTIONS		1
 
+#if !defined( _WIN64 )
 #if !defined( _X360 )
 #if defined( _MSC_VER )
 
@@ -875,6 +868,7 @@ static FORCEINLINE double fsel(double fComparand, double fValGE, double fLT)
 	}
 
 #endif // _X360
+#endif // _WIN64
 
 //-----------------------------------------------------------------------------
 // Purpose: Standard functions for handling endian-ness
@@ -1060,51 +1054,46 @@ inline T QWordSwapC( T dw )
 // platform/compiler this should be tested.
 inline short BigShort( short val )		{ int test = 1; return ( *(char *)&test == 1 ) ? WordSwap( val )  : val; }
 inline uint16 BigWord( uint16 val )		{ int test = 1; return ( *(char *)&test == 1 ) ? WordSwap( val )  : val; }
-inline long BigLong( long val )			{ int test = 1; return ( *(char *)&test == 1 ) ? DWordSwap( val ) : val; }
+inline int32_t BigLong( int32_t val )	{ int test = 1; return ( *(char *)&test == 1 ) ? DWordSwap( val ) : val; }
 inline uint32 BigDWord( uint32 val )	{ int test = 1; return ( *(char *)&test == 1 ) ? DWordSwap( val ) : val; }
 inline short LittleShort( short val )	{ int test = 1; return ( *(char *)&test == 1 ) ? val : WordSwap( val ); }
 inline uint16 LittleWord( uint16 val )	{ int test = 1; return ( *(char *)&test == 1 ) ? val : WordSwap( val ); }
-inline long LittleLong( long val )		{ int test = 1; return ( *(char *)&test == 1 ) ? val : DWordSwap( val ); }
+inline int32_t LittleLong( int32_t val )		{ int test = 1; return ( *(char *)&test == 1 ) ? val : DWordSwap( val ); }
 inline uint32 LittleDWord( uint32 val )	{ int test = 1; return ( *(char *)&test == 1 ) ? val : DWordSwap( val ); }
 inline uint64 LittleQWord( uint64 val )	{ int test = 1; return ( *(char *)&test == 1 ) ? val : QWordSwap( val ); }
 inline short SwapShort( short val )					{ return WordSwap( val ); }
 inline uint16 SwapWord( uint16 val )				{ return WordSwap( val ); }
-inline long SwapLong( long val )					{ return DWordSwap( val ); }
+inline int32_t SwapLong( int32_t val )					{ return DWordSwap( val ); }
 inline uint32 SwapDWord( uint32 val )				{ return DWordSwap( val ); }
 
 // Pass floats by pointer for swapping to avoid truncation in the fpu
 inline void BigFloat( float *pOut, const float *pIn )		{ int test = 1; ( *(char *)&test == 1 ) ? SafeSwapFloat( pOut, pIn ) : ( *pOut = *pIn ); }
 inline void LittleFloat( float *pOut, const float *pIn )	{ int test = 1; ( *(char *)&test == 1 ) ? ( *pOut = *pIn ) : SafeSwapFloat( pOut, pIn ); }
 inline void SwapFloat( float *pOut, const float *pIn )		{ SafeSwapFloat( pOut, pIn ); }
-
 #endif
 
 #if _X360
-FORCEINLINE unsigned long LoadLittleDWord( const unsigned long *base, unsigned int dwordIndex )
-		{
-			return __loadwordbytereverse( dwordIndex<<2, base );
-		}
+inline uint32_t LoadLittleDWord( uint32_t *base, unsigned int dwordIndex )
+{
+	return __loadwordbytereverse( dwordIndex<<2, base );
+}
 
-FORCEINLINE void StoreLittleDWord( unsigned long *base, unsigned int dwordIndex, unsigned long dword )
-		{
-			__storewordbytereverse( dword, dwordIndex<<2, base );
-		}
+inline void StoreLittleDWord( uint32_t *base, unsigned int dwordIndex, uint32_t dword )
+{
+	__storewordbytereverse( dword, dwordIndex<<2, base );
+}
 #else
-FORCEINLINE unsigned long LoadLittleDWord( const unsigned long *base, unsigned int dwordIndex )
-	{
-		return LittleDWord( base[dwordIndex] );
-	}
+inline uint32_t LoadLittleDWord( uint32_t *base, unsigned int dwordIndex )
+{
+	return LittleDWord( base[dwordIndex] );
+}
 
-FORCEINLINE void StoreLittleDWord( unsigned long *base, unsigned int dwordIndex, unsigned long dword )
-	{
-		base[dwordIndex] = LittleDWord(dword);
-	}
+inline void StoreLittleDWord( uint32_t *base, unsigned int dwordIndex, uint32_t dword )
+{
+	base[dwordIndex] = LittleDWord(dword);
+}
 #endif
 
-
-//-----------------------------------------------------------------------------
-// DLL export for platform utilities
-//-----------------------------------------------------------------------------
 #ifndef STATIC_TIER0
 
 #ifdef TIER0_DLL_EXPORT
@@ -1135,42 +1124,11 @@ PLATFORM_INTERFACE bool				Plat_IsInBenchmarkMode();
 
 
 PLATFORM_INTERFACE double			Plat_FloatTime();		// Returns time in seconds since the module was loaded.
-PLATFORM_INTERFACE unsigned int		Plat_MSTime();			// Time in milliseconds.
+PLATFORM_INTERFACE uint32_t			Plat_MSTime();			// Time in milliseconds.
 PLATFORM_INTERFACE char *			Plat_ctime( const time_t *timep, char *buf, size_t bufsize );
 PLATFORM_INTERFACE struct tm *		Plat_gmtime( const time_t *timep, struct tm *result );
 PLATFORM_INTERFACE time_t			Plat_timegm( struct tm *timeptr );
 PLATFORM_INTERFACE struct tm *		Plat_localtime( const time_t *timep, struct tm *result );
-
-#if defined( _WIN32 ) && defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
-	extern "C" unsigned __int64 __rdtsc();
-	#pragma intrinsic(__rdtsc)
-#endif
-
-inline uint64 Plat_Rdtsc()
-{
-#if defined( _X360 )
-	return ( uint64 )__mftb32();
-#elif defined( _WIN64 )
-	return ( uint64 )__rdtsc();
-#elif defined( _WIN32 )
-  #if defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
-	return ( uint64 )__rdtsc();
-  #else
-    __asm rdtsc;
-	__asm ret;
-  #endif
-#elif defined( __i386__ )
-	uint64 val;
-	__asm__ __volatile__ ( "rdtsc" : "=A" (val) );
-	return val;
-#elif defined( __x86_64__ )
-	uint32 lo, hi;
-	__asm__ __volatile__ ( "rdtsc" : "=a" (lo), "=d" (hi));
-	return ( ( ( uint64 )hi ) << 32 ) | lo;
-#else
-	#error
-#endif
-}
 
 // b/w compatibility
 #define Sys_FloatTime Plat_FloatTime
@@ -1247,6 +1205,37 @@ PLATFORM_INTERFACE void	Plat_SetHardwareDataBreakpoint( const void *pAddress, in
 
 // Apply current hardware data breakpoints to a newly created thread.
 PLATFORM_INTERFACE void	Plat_ApplyHardwareDataBreakpointsToNewThread( unsigned long dwThreadID );
+// Registers the current thread with Tier0's thread management system.
+// This should be called on every thread created in the game.
+PLATFORM_INTERFACE ThreadId_t Plat_RegisterThread( const tchar *pName = _T("Source Thread"));
+
+// Registers the current thread as the primary thread.
+PLATFORM_INTERFACE ThreadId_t Plat_RegisterPrimaryThread();
+
+// VC-specific. Sets the thread's name so it has a friendly name in the debugger.
+// This should generally only be handled by Plat_RegisterThread and Plat_RegisterPrimaryThread
+PLATFORM_INTERFACE void	Plat_SetThreadName( ThreadId_t dwThreadID, const tchar *pName );
+
+// These would be private if it were possible to export private variables from a .DLL.
+// They need to be variables because they are checked by inline functions at performance
+// critical places.
+PLATFORM_INTERFACE ThreadId_t Plat_PrimaryThreadID;
+
+// Returns the ID of the currently executing thread.
+PLATFORM_INTERFACE ThreadId_t Plat_GetCurrentThreadID();
+
+// Returns the ID of the primary thread.
+inline ThreadId_t Plat_GetPrimaryThreadID()
+{
+	return Plat_PrimaryThreadID;
+}
+
+// Returns true if the current thread is the primary thread.
+inline bool Plat_IsPrimaryThread()
+{
+	//return true;
+	return (Plat_GetPrimaryThreadID() == Plat_GetCurrentThreadID() );
+}
 
 //-----------------------------------------------------------------------------
 // Process related functions
@@ -1301,6 +1290,16 @@ PLATFORM_INTERFACE void Plat_DebugString( const char * );
 #else
 inline bool Plat_IsInDebugSession( bool bForceRecheck = false ) { return false; }
 #define Plat_DebugString(s) ((void)0)
+#endif
+
+#if defined(_WIN32)
+PLATFORM_INTERFACE bool Plat_IsChromeOS();
+PLATFORM_INTERFACE bool Plat_IsGamescope();
+PLATFORM_INTERFACE bool Plat_IsSteamConsoleMode();
+PLATFORM_INTERFACE bool Plat_IsSteamDeck();
+PLATFORM_INTERFACE bool Plat_IsSteamOS();
+PLATFORM_INTERFACE bool Plat_IsSteamOS3();
+PLATFORM_INTERFACE bool Plat_IsTesla();
 #endif
 
 //-----------------------------------------------------------------------------

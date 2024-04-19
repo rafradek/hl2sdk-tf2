@@ -52,7 +52,7 @@ public:
 	virtual bool			FileExists( const char *pFileName, const char *pPathID )					{ return m_pBaseFileSystemPassThru->FileExists( pFileName, pPathID ); }
 	virtual bool			IsFileWritable( char const *pFileName, const char *pPathID )					{ return m_pBaseFileSystemPassThru->IsFileWritable( pFileName, pPathID ); }
 	virtual bool			SetFileWritable( char const *pFileName, bool writable, const char *pPathID )	{ return m_pBaseFileSystemPassThru->SetFileWritable( pFileName, writable, pPathID ); }
-	virtual long			GetFileTime( const char *pFileName, const char *pPathID )						{ return m_pBaseFileSystemPassThru->GetFileTime( pFileName, pPathID ); }
+	virtual int32_t			GetFileTime( const char *pFileName, const char *pPathID )						{ return m_pBaseFileSystemPassThru->GetFileTime( pFileName, pPathID ); }
 	virtual bool			ReadFile( const char *pFileName, const char *pPath, CUtlBuffer &buf, int nMaxBytes = 0, int nStartingByte = 0, FSAllocFunc_t pfnAlloc = NULL ) { return m_pBaseFileSystemPassThru->ReadFile( pFileName, pPath, buf, nMaxBytes, nStartingByte, pfnAlloc  ); }
 	virtual bool			WriteFile( const char *pFileName, const char *pPath, CUtlBuffer &buf )		{  return m_pBaseFileSystemPassThru->WriteFile( pFileName, pPath, buf ); }
 	virtual bool			UnzipFile( const char *pFileName, const char *pPath, const char *pDestination )		{  return m_pBaseFileSystemPassThru->UnzipFile( pFileName, pPath, pDestination ); }
@@ -100,7 +100,7 @@ public:
 	virtual bool			RenameFile( char const *pOldPath, char const *pNewPath, const char *pathID ) override		{ return m_pFileSystemPassThru->RenameFile( pOldPath, pNewPath, pathID ); }
 	virtual void			CreateDirHierarchy( const char *path, const char *pathID ) override							{ m_pFileSystemPassThru->CreateDirHierarchy( path, pathID ); }
 	virtual bool			IsDirectory( const char *pFileName, const char *pathID ) override							{ return m_pFileSystemPassThru->IsDirectory( pFileName, pathID ); }
-	virtual void			FileTimeToString( char* pStrip, int maxCharsIncludingTerminator, long fileTime ) override	{ m_pFileSystemPassThru->FileTimeToString( pStrip, maxCharsIncludingTerminator, fileTime ); }
+	virtual void			FileTimeToString( char* pStrip, int maxCharsIncludingTerminator, int32_t fileTime ) override	{ m_pFileSystemPassThru->FileTimeToString( pStrip, maxCharsIncludingTerminator, fileTime ); }
 	virtual void			SetBufferSize( FileHandle_t file, unsigned nBytes ) override									{ m_pFileSystemPassThru->SetBufferSize( file, nBytes  ); }
 	virtual bool			IsOk( FileHandle_t file ) override															{ return m_pFileSystemPassThru->IsOk( file ); }
 	virtual bool			EndOfFile( FileHandle_t file ) override														{ return m_pFileSystemPassThru->EndOfFile( file ); }
@@ -209,9 +209,9 @@ public:
 	virtual void			EndMapAccess() override { m_pFileSystemPassThru->EndMapAccess(); }
 
 	virtual bool			ReadToBuffer( FileHandle_t hFile, CUtlBuffer &buf, int nMaxBytes = 0, FSAllocFunc_t pfnAlloc = NULL ) override { return m_pFileSystemPassThru->ReadToBuffer( hFile, buf, nMaxBytes, pfnAlloc ); }
-	virtual bool			FullPathToRelativePathEx( const char *pFullPath, const char *pPathId, OUT_Z_CAP(maxLenInChars) char *pDest, int maxLenInChars ) override { return m_pFileSystemPassThru->FullPathToRelativePathEx( pFullPath, pPathId, pDest, maxLenInChars ); }
-	virtual int				GetPathIndex( const FileNameHandle_t &handle ) override { return m_pFileSystemPassThru->GetPathIndex( handle ); }
-	virtual long			GetPathTime( const char *pPath, const char *pPathID ) override { return m_pFileSystemPassThru->GetPathTime( pPath, pPathID ); }
+	virtual bool			FullPathToRelativePathEx( const char *pFullPath, const char *pPathId, char *pRelative, int nMaxLen ) override { return m_pFileSystemPassThru->FullPathToRelativePathEx( pFullPath, pPathId, pRelative, nMaxLen ); }
+	virtual int				GetPathIndex( const FileNameHandle_t &handle ) override  { return m_pFileSystemPassThru->GetPathIndex( handle ); }
+	virtual int32_t			GetPathTime( const char *pPath, const char *pPathID ) override { return m_pFileSystemPassThru->GetPathTime( pPath, pPathID ); }
 
 	virtual DVDMode_t		GetDVDMode() override { return m_pFileSystemPassThru->GetDVDMode(); }
 

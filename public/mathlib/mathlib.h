@@ -7,6 +7,7 @@
 #ifndef MATH_LIB_H
 #define MATH_LIB_H
 
+#include <cmath>
 #include <math.h>
 #include "tier0/basetypes.h"
 #include "tier0/commonmacros.h"
@@ -92,7 +93,40 @@ private:
 	FPExceptionEnabler& operator=(const FPExceptionEnabler&);
 };
 
+// Fast, accurate ftol:
+FORCEINLINE int Float2Int( float a )
+{
+#if defined ( _WIN64 )
+	return a;
+#elif defined( _X360 )
+	union
+	{
+		double flResult;
+		int pResult[2];
+	};
+	flResult = __fctiwz( a );
+	return pResult[1];
+#else  // !X360
+	// Rely on compiler to generate CVTTSS2SI on x86
+	return (int) a;
+#endif
+}
 
+// Over 15x faster than: (int)floor(value)
+inline int Floor2Int( float a )
+{
+	int RetVal;
+#if defined( __i386__ )
+	// Convert to int and back, compare, subtract one if too big
+	__m128 a128 = _mm_set_ss(a);
+	RetVal = _mm_cvtss_si32(a128);
+    __m128 rounded128 = _mm_cvt_si2ss(_mm_setzero_ps(), RetVal);
+	RetVal -= _mm_comigt_ss( rounded128, a128 );
+#else
+	RetVal = static_cast<int>( floor(a) );
+#endif
+	return RetVal;
+}
 
 #ifdef DEBUG  // stop crashing edit-and-continue
 FORCEINLINE float clamp( float val, float minVal, float maxVal )
@@ -439,7 +473,10 @@ int Q_log2(int val);
 // Math routines done in optimized assembly math package routines
 void inline SinCos( float radians, float *sine, float *cosine )
 {
-#if defined( _X360 )
+#if defined( _WIN64 )
+	*sine = sinf(radians);
+	*cosine = cosf(radians);
+#elif defined( _X360 )
 	XMScalarSinCos( sine, cosine, radians );
 #elif defined( PLATFORM_WINDOWS_PC32 )
 	_asm
@@ -1234,9 +1271,11 @@ FORCEINLINE unsigned char RoundFloatToByte(float f)
 	return (unsigned char) nResult;
 }
 
-FORCEINLINE unsigned long RoundFloatToUnsignedLong(float f)
+FORCEINLINE uint32_t RoundFloatToUnsignedLong(float f)
 {
-#if defined( _X360 )
+#if defined( _WIN64 )
+	return std::round(f);
+#elif defined( _X360 )
 #ifdef Assert
 	Assert( IsFPUControlWordSet() );
 #endif
@@ -1244,7 +1283,7 @@ FORCEINLINE unsigned long RoundFloatToUnsignedLong(float f)
 	{
 		double flResult;
 		int pIntResult[2];
-		unsigned long pResult[2];
+		uint32_t pResult[2];
 	};
 	flResult = __fctiw( f );
 	Assert( pIntResult[1] >= 0 );
@@ -1271,59 +1310,14 @@ FORCEINLINE unsigned long RoundFloatToUnsignedLong(float f)
 #else // PLATFORM_WINDOWS_PC64
 	unsigned char nResult[8];
 
-	#if defined( _WIN32 )
-		__asm
-		{
-			fld f
-			fistp       qword ptr nResult
-		}
-	#elif POSIX
-		__asm __volatile__ (
-			"fistpl %0;": "=m" (nResult): "t" (f) : "st"
-		);
-	#endif
-
-		return *((unsigned long*)nResult);
-#endif // PLATFORM_WINDOWS_PC64
-#endif // !X360
+	return *((uint32_t*)nResult);
+#endif
+#endif
 }
 
 FORCEINLINE bool IsIntegralValue( float flValue, float flTolerance = 0.001f )
 {
 	return fabs( RoundFloatToInt( flValue ) - flValue ) < flTolerance;
-}
-
-// Fast, accurate ftol:
-FORCEINLINE int Float2Int( float a )
-{
-#if defined( _X360 )
-	union
-	{
-		double flResult;
-		int pResult[2];
-	};
-	flResult = __fctiwz( a );
-	return pResult[1];
-#else  // !X360
-	// Rely on compiler to generate CVTTSS2SI on x86
-	return (int) a;
-#endif
-}
-
-// Over 15x faster than: (int)floor(value)
-inline int Floor2Int( float a )
-{
-	int RetVal;
-#if defined( __i386__ )
-	// Convert to int and back, compare, subtract one if too big
-	__m128 a128 = _mm_set_ss(a);
-	RetVal = _mm_cvtss_si32(a128);
-    __m128 rounded128 = _mm_cvt_si2ss(_mm_setzero_ps(), RetVal);
-	RetVal -= _mm_comigt_ss( rounded128, a128 );
-#else
-	RetVal = static_cast<int>( floor(a) );
-#endif
-	return RetVal;
 }
 
 //-----------------------------------------------------------------------------
@@ -1337,7 +1331,7 @@ FORCEINLINE unsigned int FastFToC( float c )
 	return convert.i & 255;
 #else
 	// consoles CPUs suffer from load-hit-store penalty
-	return Float2Int( c * 255.0f );
+	return (unsigned int)Float2Int( c * 255.0f );
 #endif
 }
 
@@ -1370,6 +1364,9 @@ inline float ClampToMsec( float in )
 // Over 15x faster than: (int)ceil(value)
 inline int Ceil2Int( float a )
 {
+#if defined ( _WIN64 )
+	return std::ceil(a);
+#else
    int RetVal;
 #if defined( __i386__ )
    // Convert to int and back, compare, add one if too small
@@ -1381,6 +1378,7 @@ inline int Ceil2Int( float a )
    RetVal = static_cast<int>( ceil(a) );
 #endif
 	return RetVal;
+#endif // _WIN64
 }
 
 

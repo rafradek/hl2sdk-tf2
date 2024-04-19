@@ -4,6 +4,7 @@
 //
 //===========================================================================//
 
+#include "tier0/threadtools.h"
 #include "mempool.h"
 #include <stdio.h>
 #include <malloc.h>
