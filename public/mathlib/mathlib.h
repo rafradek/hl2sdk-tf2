@@ -473,10 +473,7 @@ int Q_log2(int val);
 // Math routines done in optimized assembly math package routines
 void inline SinCos( float radians, float *sine, float *cosine )
 {
-#if defined( _WIN64 )
-	*sine = sinf(radians);
-	*cosine = cosf(radians);
-#elif defined( _X360 )
+#if defined( _X360 )
 	XMScalarSinCos( sine, cosine, radians );
 #elif defined( PLATFORM_WINDOWS_PC32 )
 	_asm
@@ -798,10 +795,6 @@ template <class T> FORCEINLINE T AVG(T a, T b)
 // XYZ macro, for printf type functions - ex printf("%f %f %f",XYZ(myvector));
 #define XYZ(v) (v).x,(v).y,(v).z
 
-//
-// Returns a clamped value in the range [min, max].
-//
-#define V_clamp(val, min, max) (((val) > (max)) ? (max) : (((val) < (min)) ? (min) : (val)))
 
 inline float Sign( float x )
 {
@@ -1238,7 +1231,7 @@ inline float SimpleSplineRemapValClamped( float val, float A, float B, float C, 
 	if ( A == B )
 		return val >= B ? D : C;
 	float cVal = (val - A) / (B - A);
-	cVal = V_clamp( cVal, 0.0f, 1.0f );
+	cVal = clamp( cVal, 0.0f, 1.0f );
 	return C + (D - C) * SimpleSpline( cVal );
 }
 
@@ -1273,9 +1266,7 @@ FORCEINLINE unsigned char RoundFloatToByte(float f)
 
 FORCEINLINE uint32_t RoundFloatToUnsignedLong(float f)
 {
-#if defined( _WIN64 )
-	return std::round(f);
-#elif defined( _X360 )
+#if defined( _X360 )
 #ifdef Assert
 	Assert( IsFPUControlWordSet() );
 #endif
@@ -1310,9 +1301,21 @@ FORCEINLINE uint32_t RoundFloatToUnsignedLong(float f)
 #else // PLATFORM_WINDOWS_PC64
 	unsigned char nResult[8];
 
+#if defined( _WIN32 )
+		__asm
+		{
+			fld f
+			fistp       qword ptr nResult
+		}
+#elif POSIX
+		__asm __volatile__ (
+			"fistpl %0;": "=m" (nResult): "t" (f) : "st"
+		);
+#endif
+
 	return *((uint32_t*)nResult);
-#endif
-#endif
+#endif // PLATFORM_WINDOWS_PC64
+#endif // !X360
 }
 
 FORCEINLINE bool IsIntegralValue( float flValue, float flTolerance = 0.001f )
@@ -1331,7 +1334,7 @@ FORCEINLINE unsigned int FastFToC( float c )
 	return convert.i & 255;
 #else
 	// consoles CPUs suffer from load-hit-store penalty
-	return (unsigned int)Float2Int( c * 255.0f );
+	return Float2Int( c * 255.0f );
 #endif
 }
 
@@ -1364,9 +1367,6 @@ inline float ClampToMsec( float in )
 // Over 15x faster than: (int)ceil(value)
 inline int Ceil2Int( float a )
 {
-#if defined ( _WIN64 )
-	return std::ceil(a);
-#else
    int RetVal;
 #if defined( __i386__ )
    // Convert to int and back, compare, add one if too small
@@ -1378,7 +1378,6 @@ inline int Ceil2Int( float a )
    RetVal = static_cast<int>( ceil(a) );
 #endif
 	return RetVal;
-#endif // _WIN64
 }
 
 
@@ -1622,7 +1621,7 @@ float Hermite_Spline(
 	float t );
 
 
-void Hermite_SplineBasis( float t, float basis[4] );
+void Hermite_SplineBasis( float t, float basis[] );
 
 void Hermite_Spline( 
 	const Quaternion &q0, 
@@ -2170,7 +2169,7 @@ inline bool CloseEnough( const Vector &a, const Vector &b, float epsilon = EQUAL
 // Fast compare
 // maxUlps is the maximum error in terms of Units in the Last Place. This 
 // specifies how big an error we are willing to accept in terms of the value
-// of the least significant digit of the floating point number�s 
+// of the least significant digit of the floating point number’s 
 // representation. maxUlps can also be interpreted in terms of how many 
 // representable floats we are willing to accept between A and B. 
 // This function will allow maxUlps-1 floats between A and B.

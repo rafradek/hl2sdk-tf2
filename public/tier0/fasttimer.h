@@ -93,7 +93,7 @@ public:
 	CCycleCount 		GetDurationInProgress() const; // Call without ending. Not that cheap.
 
 	// Return number of cycles per second on this processor.
-	static inline uint64_t GetClockSpeed();
+	static inline int64	GetClockSpeed();
 
 private:
 	CCycleCount	m_Duration;
@@ -272,48 +272,7 @@ inline void CCycleCount::Init( uint64 cycles )
 
 inline void CCycleCount::Sample()
 {
-#if defined( _X360 )
-#if !defined( _CERT )
-	// read the highest resolution timer directly (ticks at native 3.2GHz), bypassing any calls into PMC
-	// can only resolve 32 bits, rollover is ~1.32 secs
-	// based on PMCGetIntervalTimer() from the April 2007 XDK
-	int64 temp;
-	__asm 
-	{
-		lis		r11,08FFFh
-		ld		r11,011E0h(r11)
-		rldicl	r11,r11,32,32
-		// unforunate can't get the inline assembler to write directly into desired target
-		std		r11,temp
-	}
-	m_Int64 = temp;
-#else
-	m_Int64 = ++g_dwFakeFastCounter;
-#endif
-#elif defined( _WIN32 ) && !defined( _WIN64 )
-	uint32_t* pSample = (uint32_t *)&m_Int64;
-	__asm
-	{
-		// force the cpu to synchronize the instruction queue
-		// NJS: CPUID can really impact performance in tight loops.
-		//cpuid
-		//cpuid
-		//cpuid
-		mov		ecx, pSample
-		rdtsc
-		mov		[ecx], eax
-		mov		[ecx+4], edx
-	}
-#elif defined( _LINUX )
-	uint32_t* pSample = (uint32_t *)&m_Int64;
-    __asm__ __volatile__ (  
-		"rdtsc\n\t"
-		"movl %%eax,  (%0)\n\t"
-		"movl %%edx, 4(%0)\n\t"
-		: /* no output regs */
-		: "D" (pSample)
-		: "%eax", "%edx" );
-#endif
+	m_Int64 = Plat_Rdtsc();
 }
 
 inline CCycleCount& CCycleCount::operator+=( CCycleCount const &other )
@@ -453,7 +412,7 @@ inline CCycleCount CFastTimer::GetDurationInProgress() const
 }
 
 
-inline uint64_t CFastTimer::GetClockSpeed()
+inline int64 CFastTimer::GetClockSpeed()
 {
 	return g_ClockSpeed;
 }

@@ -25,6 +25,7 @@
 #include "mathlib/mathlib.h"
 #include "mathlib/vector.h"
 #if !defined( _X360 )
+#include "mathlib/amd3dx.h"
 #include "sse.h"
 #endif
 
@@ -1774,7 +1775,7 @@ void QuaternionScale( const Quaternion &p, float t, Quaternion &q )
 	// FIXME: nick, this isn't overly sensitive to accuracy, and it may be faster to 
 	// use the cos part (w) of the quaternion (sin(omega)*N,cos(omega)) to figure the new scale.
 	float sinom = sqrt( DotProduct( &p.x, &p.x ) );
-	sinom = MIN( sinom, 1.f );
+	sinom = V_min( sinom, 1.f );
 
 	float sinsom = sin( asin( sinom ) * t );
 
@@ -4026,10 +4027,10 @@ void CalcTriangleTangentSpace( const Vector &p0, const Vector &p1, const Vector 
 //-----------------------------------------------------------------------------
 void RGBtoHSV( const Vector &rgb, Vector &hsv )
 {
-	float flMax = MAX( rgb.x, rgb.y );
-	flMax = MAX( flMax, rgb.z );
-	float flMin = MIN( rgb.x, rgb.y );
-	flMin = MIN( flMin, rgb.z );
+	float flMax = V_max( rgb.x, rgb.y );
+	flMax = V_max( flMax, rgb.z );
+	float flMin = V_min( rgb.x, rgb.y );
+	flMin = V_min( flMin, rgb.z );
 
 	// hsv.z is the value
 	hsv.z = flMax;

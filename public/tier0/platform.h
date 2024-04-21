@@ -1130,6 +1130,37 @@ PLATFORM_INTERFACE struct tm *		Plat_gmtime( const time_t *timep, struct tm *res
 PLATFORM_INTERFACE time_t			Plat_timegm( struct tm *timeptr );
 PLATFORM_INTERFACE struct tm *		Plat_localtime( const time_t *timep, struct tm *result );
 
+#if defined( _WIN32 ) && defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
+	extern "C" unsigned __int64 __rdtsc();
+	#pragma intrinsic(__rdtsc)
+#endif
+
+inline uint64 Plat_Rdtsc()
+{
+#if defined( _X360 )
+	return ( uint64 )__mftb32();
+#elif defined( _WIN64 )
+	return ( uint64 )__rdtsc();
+#elif defined( _WIN32 )
+  #if defined( _MSC_VER ) && ( _MSC_VER >= 1400 )
+	return ( uint64 )__rdtsc();
+  #else
+    __asm rdtsc;
+	__asm ret;
+  #endif
+#elif defined( __i386__ )
+	uint64 val;
+	__asm__ __volatile__ ( "rdtsc" : "=A" (val) );
+	return val;
+#elif defined( __x86_64__ )
+	uint32 lo, hi;
+	__asm__ __volatile__ ( "rdtsc" : "=a" (lo), "=d" (hi));
+	return ( ( ( uint64 )hi ) << 32 ) | lo;
+#else
+	#error
+#endif
+}
+
 // b/w compatibility
 #define Sys_FloatTime Plat_FloatTime
 
@@ -1149,9 +1180,12 @@ PLATFORM_INTERFACE struct tm *		Plat_localtime( const time_t *timep, struct tm *
 		}
 
 // Processor Information:
-struct CPUInformation
+struct CPUInformation // Size: Win32=64, Win64=72
 {
 	int	 m_Size;		// Size of this structure, for forward compatability.
+
+	uint8 m_nLogicalProcessors;		// Number op logical processors.
+	uint8 m_nPhysicalProcessors;	// Number of physical processors
 
 	bool m_bRDTSC : 1,	// Is RDTSC supported?
 		 m_bCMOV  : 1,  // Is CMOV supported?
@@ -1162,21 +1196,26 @@ struct CPUInformation
 		 m_bMMX   : 1,	// Is MMX supported?
 		 m_bHT	  : 1;	// Is HyperThreading supported?
 
-	uint8 m_nLogicalProcessors;		// Number op logical processors.
-	uint8 m_nPhysicalProcessors;	// Number of physical processors
-	
 	bool m_bSSE3 : 1,
 		 m_bSSSE3 : 1,
 		 m_bSSE4a : 1,
 		 m_bSSE41 : 1,
-		 m_bSSE42 : 1;	
+		 m_bSSE42 : 1,
+		 m_bAVX   : 1;
 
 	int64 m_Speed;						// In cycles per second.
 
 	tchar* m_szProcessorID;				// Processor vendor Identification.
+	tchar* m_szProcessorBrand;
 
 	uint32 m_nModel;
-	uint32 m_nFeatures[3];
+	uint32 m_nFeatures[ 3 ];
+	uint32 m_nL1CacheSizeKb;
+	uint32 m_nL1CacheDesc;
+	uint32 m_nL2CacheSizeKb;
+	uint32 m_nL2CacheDesc;
+	uint32 m_nL3CacheSizeKb;
+	uint32 m_nL3CacheDesc;
 
 	CPUInformation(): m_Size(0){}
 };
