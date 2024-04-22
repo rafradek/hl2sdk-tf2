@@ -277,7 +277,7 @@ CSysModule *Sys_LoadModule( const char *pModuleName, Sys_Flags flags /* = SYS_NO
 	// file in the depot (MFP) or a filesystem GetLocalCopy() call must be made
 	// prior to the call to this routine.
 	char szCwd[1024];
-	HMODULE hDLL = NULL;
+	HMODULE hDLL = 0;
 
 	if ( !Q_IsAbsolutePath( pModuleName ) )
 	{
