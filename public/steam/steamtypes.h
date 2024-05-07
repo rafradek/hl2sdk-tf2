@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2008, Valve LLC, All rights reserved. ============
+//========= Copyright Â© 1996-2008, Valve LLC, All rights reserved. ============
 //
 // Purpose:
 //
@@ -64,8 +64,8 @@ typedef short int16;
 typedef unsigned short uint16;
 typedef int int32;
 typedef unsigned int uint32;
-typedef long long int64;
-typedef unsigned long long uint64;
+typedef int64_t int64;
+typedef uint64_t uint64;
 
 // [u]int64 are actually defined as 'long long' and gcc 64-bit
 // doesn't automatically consider them the same as 'long int'.
