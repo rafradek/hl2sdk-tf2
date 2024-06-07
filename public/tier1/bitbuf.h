@@ -337,7 +337,7 @@ BITBUF_INLINE void bf_write::SetOverflowFlag()
 
 BITBUF_INLINE void bf_write::WriteOneBitNoCheck(int nValue)
 {
-#if __i386__
+#if PLATFORM_X86
 	if(nValue)
 		m_pData[m_iCurBit >> 5] |= 1u << (m_iCurBit & 31);
 	else
@@ -374,7 +374,7 @@ inline void	bf_write::WriteOneBitAt( int iBit, int nValue )
 		return;
 	}
 
-#if __i386__
+#if PLATFORM_X86
 	if(nValue)
 		m_pData[iBit >> 5] |= 1u << (iBit & 31);
 	else
