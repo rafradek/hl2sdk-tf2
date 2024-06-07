@@ -785,7 +785,7 @@ BITBUF_INLINE unsigned int bf_read::ReadUBitLong( int numbits )
 	unsigned int iWordOffset2 = iLastBit >> 5;
 	m_iCurBit += numbits;
 	
-#if __i386__
+#if PLATFORM_X86
 	unsigned int bitmask = (2 << (numbits-1)) - 1;
 #else
 	extern uint32_t g_ExtraMasks[33];
