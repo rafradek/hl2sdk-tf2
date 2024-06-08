@@ -80,8 +80,8 @@ typedef unsigned long int ulint64;
 typedef int64 intp;
 typedef uint64 uintp;
 #else
-typedef int64 intp;
-typedef uint64 uintp;
+typedef int32 intp;
+typedef uint32 uintp;
 #endif
 
 #endif // else _WIN32
