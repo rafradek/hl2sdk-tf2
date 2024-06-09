@@ -13,10 +13,6 @@
 #define PLATFORM_64BITS 1
 #endif
 
-#if defined(__x86_64__) || defined(__i386__) || defined(_M_IX86) || defined(_M_X64) 
-#define PLATFORM_X86 1
-#endif
-
 #if defined(__GCC__) || defined(__GNUC__)
 #define COMPILER_GCC 1
 #endif
@@ -207,24 +203,19 @@ typedef signed char int8;
 
 #endif // else _WIN32
 
-typedef short					int16;
-typedef unsigned short			uint16;
-typedef int						int32;
-typedef unsigned int			uint32;
-typedef long long				int64;
-typedef unsigned long long		uint64;
-#ifdef PLATFORM_64BITS
-	typedef long long			intp;
-	typedef unsigned long long	uintp;
-#else
-	typedef int					intp;
-	typedef unsigned int		uintp;
-#endif
+typedef int16_t				int16;
+typedef uint16_t			uint16;
+typedef int32_t				int32;
+typedef uint32_t			uint32;
+typedef long long			int64;
+typedef unsigned long long	uint64;
+typedef intptr_t			intp;
+typedef uintptr_t			uintp;
 
 #ifdef PLATFORM_64BITS
-typedef uint64 	ThreadId_t;
+typedef unsigned long long 	ThreadId_t;
 #else
-typedef uint32 	ThreadId_t;
+typedef uint32_t 			ThreadId_t;
 #endif
 
 //-----------------------------------------------------------------------------
@@ -457,7 +448,7 @@ typedef void * HINSTANCE;
 	#endif
 #endif
 
-#if defined PLATFORM_X86 && !defined __linux__
+#if defined __i386__ && !defined __linux__
 	#define id386	1
 #else
 	#define id386	0
@@ -1002,7 +993,7 @@ inline T QWordSwapC( T dw )
 // The typically used methods.
 //-------------------------------------
 
-#if defined(PLATFORM_X86) && !defined(VALVE_LITTLE_ENDIAN)
+#if defined(__i386__) && !defined(VALVE_LITTLE_ENDIAN)
 #define VALVE_LITTLE_ENDIAN 1
 #endif
 
