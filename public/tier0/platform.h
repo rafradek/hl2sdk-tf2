@@ -9,6 +9,10 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__) ||  defined(_M_IX86)
+#define PLATFORM_X86_X86_64 1
+#endif
+
 #if defined(__x86_64__) || defined(_WIN64)
 #define PLATFORM_64BITS 1
 #endif
@@ -367,6 +371,10 @@ FIXME: Enable this when we no longer fear change =)
 
 #if defined(_M_IX86)
 #define __i386__	1
+#endif
+
+#if defined(_M_X64)
+#define __x86_64__	1
 #endif
 
 #elif POSIX
@@ -993,7 +1001,7 @@ inline T QWordSwapC( T dw )
 // The typically used methods.
 //-------------------------------------
 
-#if defined(__i386__) && !defined(VALVE_LITTLE_ENDIAN)
+#if defined(PLATFORM_X86_X86_64) && !defined(VALVE_LITTLE_ENDIAN)
 #define VALVE_LITTLE_ENDIAN 1
 #endif
 
