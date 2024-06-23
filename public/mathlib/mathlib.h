@@ -17,7 +17,7 @@
 
 #include "mathlib/math_pfns.h"
 
-#if defined(__i386__) || defined(_M_IX86)
+#if defined(PLATFORM_X86_X86_64)
 // For MMX intrinsics
 #include <xmmintrin.h>
 #endif
@@ -116,7 +116,7 @@ FORCEINLINE int Float2Int( float a )
 inline int Floor2Int( float a )
 {
 	int RetVal;
-#if defined( __i386__ )
+#if defined( PLATFORM_X86_X86_64 )
 	// Convert to int and back, compare, subtract one if too big
 	__m128 a128 = _mm_set_ss(a);
 	RetVal = _mm_cvtss_si32(a128);
@@ -143,7 +143,7 @@ FORCEINLINE float clamp( float val, float minVal, float maxVal )
 #else // DEBUG
 FORCEINLINE float clamp( float val, float minVal, float maxVal )
 {
-#if defined(__i386__) || defined(_M_IX86)
+#if defined(PLATFORM_X86_X86_64)
 	_mm_store_ss( &val,
 		_mm_min_ss(
 			_mm_max_ss(
@@ -1237,7 +1237,7 @@ inline float SimpleSplineRemapValClamped( float val, float A, float B, float C, 
 
 FORCEINLINE int RoundFloatToInt(float f)
 {
-#if defined(__i386__) || defined(_M_IX86) || defined( PLATFORM_WINDOWS_PC64 ) || defined(__x86_64__)
+#if defined(PLATFORM_X86_X86_64)
 	return _mm_cvtss_si32(_mm_load_ss(&f));
 #elif defined( _X360 )
 #ifdef Assert
@@ -1328,7 +1328,7 @@ FORCEINLINE bool IsIntegralValue( float flValue, float flTolerance = 0.001f )
 //-----------------------------------------------------------------------------
 FORCEINLINE unsigned int FastFToC( float c )
 {
-#if defined( __i386__ )
+#if defined( PLATFORM_X86_X86_64 )
 	// IEEE float bit manipulation works for values between [0, 1<<23)
 	union { float f; int i; } convert = { c*255.0f + (float)(1<<23) };
 	return convert.i & 255;
@@ -1343,7 +1343,7 @@ FORCEINLINE unsigned int FastFToC( float c )
 //-----------------------------------------------------------------------------
 FORCEINLINE int FastFloatToSmallInt( float c )
 {
-#if defined( __i386__ )
+#if defined( PLATFORM_X86_X86_64 )
 	// IEEE float bit manipulation works for values between [-1<<22, 1<<22)
 	union { float f; int i; } convert = { c + (float)(3<<22) };
 	return (convert.i & ((1<<23)-1)) - (1<<22);
@@ -1368,7 +1368,7 @@ inline float ClampToMsec( float in )
 inline int Ceil2Int( float a )
 {
    int RetVal;
-#if defined( __i386__ )
+#if defined( PLATFORM_X86_X86_64 )
    // Convert to int and back, compare, add one if too small
    __m128 a128 = _mm_load_ss(&a);
    RetVal = _mm_cvtss_si32(a128);
