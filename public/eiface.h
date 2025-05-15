@@ -346,7 +346,10 @@ public:
 
 	// Tells the engine we can immdiately re-use all edict indices
 	// even though we may not have waited enough time
-	virtual void			AllowImmediateEdictReuse( ) = 0;
+	virtual void			AllowImmediateEdictReuse( ) = 0;	
+
+	// Returns true if the engine is an internal build. i.e. is using the internal bugreporter.
+	virtual bool		IsInternalBuild( void ) = 0;
 
 	virtual IChangeInfoAccessor *GetChangeAccessor( const edict_t *pEdict ) = 0;	
 
@@ -421,8 +424,6 @@ public:
 	// Exposed for server plugin authors
 	virtual IServer *GetIServer() = 0;
 
-	// AlliedModders - Below functions require v23 of the interface.
-	
 	virtual bool IsPlayerNameLocked( const edict_t *pEdict ) = 0;
 	virtual bool CanPlayerChangeName( const edict_t *pEdict ) = 0;
 
@@ -448,6 +449,8 @@ public:
 		eFindMap_PossiblyAvailable
 	};
 	virtual eFindMapResult FindMap( /* in/out */ char *pMapName, int nMapNameMax ) = 0;
+	
+	virtual void SetPausedForced( bool bPaused, float flDuration = -1.f ) = 0;
 	
 	virtual IReplaySystem *GetReplay() = 0;
 };
